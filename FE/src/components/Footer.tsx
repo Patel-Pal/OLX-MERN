@@ -6,12 +6,12 @@ const Footer = () => {
   const role = localStorage.getItem('role');
 
   return (
-    <footer className="bg-gray-100 text-gray-700 py-6 mt-10 border-t">
+    <footer className="bg-gray-100 text-gray-700 py-6  border-t">
       <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Section 1: Branding */}
         <div>
-          <h2 className="text-xl font-bold text-blue-600">OLX Clone</h2>
+          <h2 className="text-xl font-bold text-blue-600">OLX </h2>
           <p className="text-sm mt-2">Buy, sell, and discover amazing deals with our OLX-style platform.</p>
         </div>
 

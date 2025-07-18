@@ -21,7 +21,7 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/home" className="text-xl font-bold text-blue-600">OLX Clone</Link>
+        <Link to="/home" className="text-xl font-bold text-blue-600">OLX </Link>
 
         <div className="md:hidden">
           <button
