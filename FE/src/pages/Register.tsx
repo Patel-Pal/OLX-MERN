@@ -31,29 +31,53 @@ const Register = () => {
   };
 
   return (
-    <div className="container mt-5">
-      <h2>Register</h2>
-      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form>
-          <Field name="name" className="form-control my-2" placeholder="Name" />
-          <ErrorMessage name="name" className="text-danger" component="div" />
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
+      <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-8">
+        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Register</h2>
+        <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+          <Form>
+            <Field
+              name="name"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Name"
+            />
+            <ErrorMessage name="name" component="div" className="text-sm text-red-500 mb-2" />
 
-          <Field name="email" className="form-control my-2" placeholder="Email" />
-          <ErrorMessage name="email" className="text-danger" component="div" />
+            <Field
+              name="email"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Email"
+            />
+            <ErrorMessage name="email" component="div" className="text-sm text-red-500 mb-2" />
 
-          <Field name="password" className="form-control my-2" placeholder="Password" type="password" />
-          <ErrorMessage name="password" className="text-danger" component="div" />
+            <Field
+              name="password"
+              type="password"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Password"
+            />
+            <ErrorMessage name="password" component="div" className="text-sm text-red-500 mb-2" />
 
-          <Field as="select" name="role" className="form-control my-2">
-            <option value="buyer">Buyer</option>
-            <option value="seller">Seller</option>
-          </Field>
+            <Field
+              as="select"
+              name="role"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <option value="buyer">Buyer</option>
+              <option value="seller">Seller</option>
+            </Field>
 
-          <button type="submit" className="btn btn-primary mt-2">Register</button>
-        </Form>
-      </Formik>
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+            >
+              Register
+            </button>
+          </Form>
+        </Formik>
+      </div>
     </div>
   );
-};
+}
 
 export default Register;

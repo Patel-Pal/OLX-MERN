@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Footer = () => {
   const { token } = useAuth();
-  const role = localStorage.getItem('role');
+  const role = sessionStorage.getItem('role');
 
   return (
     <footer className="bg-gray-100 text-gray-700 py-6  border-t">

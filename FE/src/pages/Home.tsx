@@ -1,9 +1,9 @@
 
 
 function Home() {
-  // const name = localStorage.getItem('username');
-  // const email = localStorage.getItem('email');
-  const role = localStorage.getItem('role');
+  // const name = sessionStorage.getItem('username');
+  // const email = sessionStorage.getItem('email');
+  const role = sessionStorage.getItem('role');
 
   return (
     <>
