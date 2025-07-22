@@ -49,4 +49,23 @@ exports.login = async (req, res) => {
   }
 };
 
+//Update user profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, role } = req.body;
+    const userId = req.user.id;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { name, role },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json({ message: 'Profile updated', name: user.name, role: user.role });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
 

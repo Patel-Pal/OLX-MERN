@@ -23,7 +23,7 @@ const Login = () => {
       sessionStorage.setItem('userId', res.data.user._id);
       console.log('userId', res.data.user._id);
 
-      setTimeout(() => navigate('/'), 1000);
+      setTimeout(() => navigate('/'), 100);
 
     } catch (err: any) {
       alert(err.response?.data?.message || 'Login failed');

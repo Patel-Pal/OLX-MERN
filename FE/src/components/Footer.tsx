@@ -6,7 +6,7 @@ const Footer = () => {
   const role = sessionStorage.getItem('role');
 
   return (
-    <footer className="bg-gray-100 text-gray-700 py-6  border-t mt-7">
+    <footer className="bg-gray-100 text-gray-700 py-6  border-t ">
       <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Section 1: Branding */}
@@ -31,7 +31,7 @@ const Footer = () => {
             {role === 'admin' && (
               <>
                 <li><Link to="/admin/users" className="hover:text-blue-600">User Management</Link></li>
-                <li><Link to="/admin/stats" className="hover:text-blue-600">Statistics</Link></li>
+                <li><Link to="/statistics" className="hover:text-blue-600">Statistics</Link></li>
               </>
             )}
           </ul>
