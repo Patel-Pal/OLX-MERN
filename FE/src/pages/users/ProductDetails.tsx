@@ -7,12 +7,14 @@ const ProductDetails = () => {
     const { id } = useParams();
     const [product, setProduct] = useState<any>(null);
     const navigate = useNavigate();
+    const role = sessionStorage.getItem('role');
 
     useEffect(() => {
         const fetchProduct = async () => {
             try {
                 const res = await axios.get(`http://localhost:5000/api/products/product_desc/${id}`);
                 setProduct(res.data);
+                // console.log('Fetched product:', res.data);
             } catch (error) {
                 console.error('Error fetching product:', error);
             }
@@ -70,8 +72,9 @@ const ProductDetails = () => {
                         <p><span className="font-medium text-gray-700">Category:</span> {product.category}</p>
                         <p><span className="font-medium text-gray-700">Seller:</span> {product.sellerId?.name} ({product.sellerId?.email})</p>
                     </div>
-
+        
                     {/* Buttons */}
+            { role !== 'seller' &&
                     <div className="flex flex-col sm:flex-row gap-4 pt-4">
                         <button className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition">
                             Place Order
@@ -80,9 +83,10 @@ const ProductDetails = () => {
                             className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition" 
                             onClick={handleChatClick}
                         >
-                            Chat with Seller
+                            Chat with {product.sellerId?.name}
                         </button>
                     </div>
+                    }
                 </div>
             </div>
         </div>

@@ -14,6 +14,8 @@ const Register = () => {
     email: '',
     password: '',
     role: 'buyer',
+    phoneNumber: '',
+    address: '',
   };
 
   const validationSchema = Yup.object({
@@ -21,6 +23,10 @@ const Register = () => {
     email: Yup.string().email('Invalid email').required('Email required'),
     password: Yup.string().min(6, 'Min 6 chars').required('Password required'),
     role: Yup.string().oneOf(['buyer', 'seller']).required(),
+    phoneNumber: Yup.string()
+      .matches(/^\d{10}$/, 'Phone number must be 10 digits')
+      .required('Phone number required'),
+    address: Yup.string().required('Address required'),
   });
 
   const handleSubmit = async (values: any) => {
@@ -35,7 +41,7 @@ const Register = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4 py-14">
-      <div className="w-full max-w-md bg-white shadow-md rounded-xl p-8 ">
+      <div className="w-full max-w-md bg-white shadow-md rounded-xl p-8">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Register</h2>
 
         <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
@@ -61,6 +67,21 @@ const Register = () => {
               placeholder="Password"
             />
             <ErrorMessage name="password" component="div" className="text-sm text-red-500 mb-2" />
+
+            <Field
+              name="phoneNumber"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Phone Number (10 digits)"
+            />
+            <ErrorMessage name="phoneNumber" component="div" className="text-sm text-red-500 mb-2" />
+
+            <Field
+              as="textarea"
+              name="address"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Address"
+            />
+            <ErrorMessage name="address" component="div" className="text-sm text-red-500 mb-2" />
 
             <Field
               as="select"

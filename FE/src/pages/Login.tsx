@@ -22,8 +22,13 @@ const Login = () => {
       sessionStorage.setItem('role', res.data.user.role);
       sessionStorage.setItem('userId', res.data.user._id);
       console.log('userId', res.data.user._id);
+      if (res.data.user.role === 'admin') {
+        setTimeout(() => navigate('/statistics'), 100);
+      }else{
 
-      setTimeout(() => navigate('/'), 100);
+        setTimeout(() => navigate('/'), 100);
+      }
+
 
     } catch (err: any) {
       alert(err.response?.data?.message || 'Login failed');

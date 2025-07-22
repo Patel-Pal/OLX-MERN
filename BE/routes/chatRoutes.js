@@ -22,7 +22,38 @@ router.get('/:productId', authenticate, async (req, res) => {
 
     res.status(200).json({ success: true, messages });
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching chat history:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get unique buyers who have messaged for a specific product
+router.get('/:productId/buyers', authenticate, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const userId = req.user.id;
+
+    const messages = await Message.find({
+      productId,
+      receiverId: userId, // Only get messages where the user is the receiver (i.e., seller)
+    })
+      .populate('senderId', 'name email')
+      .sort({ createdAt: 1 });
+
+    // Extract unique buyers
+    const buyerList = messages
+      .map((msg) => ({
+        id: msg.senderId._id.toString(),
+        name: msg.senderId.name,
+      }))
+      .filter(
+        (value, index, self) =>
+          self.findIndex((v) => v.id === value.id) === index
+      );
+
+    res.status(200).json({ success: true, buyers: buyerList });
+  } catch (error) {
+    console.error('Error fetching buyers for product:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

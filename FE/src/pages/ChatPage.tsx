@@ -12,10 +12,17 @@ interface Message {
   createdAt: string;
 }
 
+interface Buyer {
+  id: string;
+  name: string;
+}
+
 const ChatPage = () => {
   const { productId, buyerId, sellerId } = useParams<{ productId: string; buyerId: string; sellerId: string }>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
+  const [selectedBuyerId, setSelectedBuyerId] = useState<string | null>(buyerId || null);
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -31,9 +38,9 @@ const ChatPage = () => {
     console.log('ChatPage params:', { productId, buyerId, sellerId, currentUserId });
 
     // Validate buyerId and sellerId
-    if (buyerId === sellerId) {
+    if (buyerId && sellerId && buyerId === sellerId) {
       console.error('Invalid chat parameters: buyerId and sellerId are the same');
-      navigate(-1); // Redirect back if IDs are invalid
+      navigate(-1);
       return;
     }
 
@@ -41,26 +48,49 @@ const ChatPage = () => {
     socketRef.current = io('http://localhost:5000', {
       reconnection: true,
       reconnectionAttempts: 5,
+      withCredentials: true,
     });
 
-    // Normalize room by sorting buyerId and sellerId
-    const sortedIds = [buyerId, sellerId].sort();
-    const room = `${productId}-${sortedIds[0]}-${sortedIds[1]}`;
-    socketRef.current.emit('joinRoom', { productId, buyerId, sellerId });
-
-    // Fetch chat history
-    const fetchChatHistory = async () => {
+    // Fetch chat history and buyers
+    const fetchChatData = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/chat/${productId}`, {
           headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
         });
         setMessages(res.data.messages);
+
+        // If seller, fetch unique buyers who have sent messages
+        if (currentUserId === sellerId) {
+          const buyerList = res.data.messages
+            .filter((msg: Message) => msg.senderId._id !== currentUserId)
+            .map((msg: Message) => ({
+              id: msg.senderId._id,
+              name: msg.senderId.name,
+            }))
+            .filter(
+              (value: Buyer, index: number, self: Buyer[]) =>
+                self.findIndex((v) => v.id === value.id) === index
+            );
+          setBuyers(buyerList);
+
+          // Set default selected buyer if none is selected
+          if (!selectedBuyerId && buyerList.length > 0) {
+            setSelectedBuyerId(buyerList[0].id);
+          }
+        }
       } catch (error) {
-        console.error('Error fetching chat history:', error);
+        console.error('Error fetching chat data:', error);
       }
     };
 
-    fetchChatHistory();
+    fetchChatData();
+
+    // Join room based on selected buyer
+    if (selectedBuyerId && productId && sellerId) {
+      const sortedIds = [selectedBuyerId, sellerId].sort();
+      const room = `${productId}-${sortedIds[0]}-${sortedIds[1]}`;
+      socketRef.current.emit('joinRoom', { productId, buyerId: selectedBuyerId, sellerId });
+    }
 
     // Listen for incoming messages
     socketRef.current.on('receiveMessage', (message: Message) => {
@@ -72,7 +102,7 @@ const ChatPage = () => {
     return () => {
       socketRef.current?.disconnect();
     };
-  }, [productId, buyerId, sellerId, navigate]);
+  }, [productId, buyerId, sellerId, navigate, currentUserId, selectedBuyerId]);
 
   useEffect(() => {
     // Scroll to the latest message
@@ -80,23 +110,41 @@ const ChatPage = () => {
   }, [messages]);
 
   const handleSendMessage = () => {
-  if (newMessage.trim() && socketRef.current && currentUserId) {
-    const isBuyer = currentUserId === buyerId;
-    const senderId = isBuyer ? buyerId : sellerId;
-    const receiverId = isBuyer ? sellerId : buyerId;
-    if (senderId === receiverId) {
-      console.error('Sender and receiver IDs cannot be the same:', { senderId, receiverId });
-      return;
+    if (newMessage.trim() && socketRef.current && currentUserId && selectedBuyerId) {
+      const isBuyer = currentUserId === selectedBuyerId;
+      const senderId = isBuyer ? selectedBuyerId : sellerId;
+      const receiverId = isBuyer ? sellerId : selectedBuyerId;
+
+      // Validate sender and receiver IDs
+      if (senderId === receiverId) {
+        console.error('Sender and receiver IDs cannot be the same:', { senderId, receiverId });
+        return;
+      }
+
+      socketRef.current.emit('sendMessage', {
+        productId,
+        senderId,
+        receiverId,
+        message: newMessage,
+      });
+      setNewMessage('');
     }
-    socketRef.current.emit('sendMessage', {
-      productId,
-      senderId,
-      receiverId,
-      message: newMessage,
-    });
-    setNewMessage('');
-  }
-};
+  };
+
+  const handleBuyerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newBuyerId = e.target.value;
+    setSelectedBuyerId(newBuyerId);
+    navigate(`/chat/${productId}/${newBuyerId}/${sellerId}`);
+  };
+
+  // Filter messages based on selected buyer
+  const filteredMessages = selectedBuyerId
+    ? messages.filter(
+        (msg) =>
+          (msg.senderId._id === selectedBuyerId && msg.receiverId._id === sellerId) ||
+          (msg.senderId._id === sellerId && msg.receiverId._id === selectedBuyerId)
+      )
+    : messages;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
@@ -108,8 +156,30 @@ const ChatPage = () => {
       </button>
       <div className="bg-white shadow-md rounded-xl p-6">
         <h2 className="text-2xl font-bold mb-4">Chat for Product ID: {productId}</h2>
+        
+        {/* Buyer selection dropdown for seller */}
+        {currentUserId === sellerId && buyers.length > 0 && (
+          <div className="mb-4">
+            <label htmlFor="buyerSelect" className="block text-sm font-medium text-gray-700">
+              Select Buyer
+            </label>
+            <select
+              id="buyerSelect"
+              value={selectedBuyerId || ''}
+              onChange={handleBuyerChange}
+              className="mt-1 block w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+            >
+              {buyers.map((buyer) => (
+                <option key={buyer.id} value={buyer.id}>
+                  {buyer.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="h-96 overflow-y-auto mb-4 p-4 bg-gray-100 rounded-md">
-          {messages.map((msg) => (
+          {filteredMessages.map((msg) => (
             <div
               key={msg._id}
               className={`mb-2 p-2 rounded-md ${

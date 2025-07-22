@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 // Register
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phoneNumber, address } = req.body;
 
     // Check existing user
     const existing = await User.findOne({ email });
@@ -16,7 +16,9 @@ exports.register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role
+      role,
+      phoneNumber,
+      address
     });
 
     res.status(201).json({ message: 'Registered successfully', user });
@@ -49,21 +51,21 @@ exports.login = async (req, res) => {
   }
 };
 
-//Update user profile
+// Update user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, role } = req.body;
+    const { name, phoneNumber, address } = req.body;
     const userId = req.user.id;
 
     const user = await User.findByIdAndUpdate(
       userId,
-      { name, role },
+      { name, phoneNumber, address },
       { new: true }
     );
 
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    res.json({ message: 'Profile updated', name: user.name, role: user.role });
+    res.json({ message: 'Profile updated', name: user.name, phoneNumber: user.phoneNumber, address: user.address });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
