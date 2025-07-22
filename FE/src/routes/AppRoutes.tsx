@@ -6,6 +6,7 @@ import AddProduct from '../pages/seller/AddProduct';
 import AllProducts from '../pages/users/Allproducts';
 import ProductDetails from '../pages/users/ProductDetails';
 import AdminStatistictics from '../pages/admin/AdminStatistictics';
+import ChatPage from '../pages/ChatPage';
 
 export default function AppRoutes() {
   const token = sessionStorage.getItem('token');
@@ -24,6 +25,7 @@ export default function AppRoutes() {
    
       <Route path="/statistics" element={role === 'admin' ? <AdminStatistictics /> : <Navigate to="/" replace />} />
 
+      <Route path="/chat/:productId/:buyerId/:sellerId" element={<ChatPage />} />
 
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />

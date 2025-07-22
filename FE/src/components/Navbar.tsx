@@ -46,7 +46,7 @@ const Navbar = () => {
           {token && role === 'seller' && (
             <>
               <Link to="/add-product" className="hover:text-blue-600">Add Product</Link>
-              <Link to="/manage-product" className="hover:text-blue-600">Manage Product</Link>
+              <Link to="/manage-product" className="hover:text-blue-600">Manage Orders</Link>
             </>
           )}
 

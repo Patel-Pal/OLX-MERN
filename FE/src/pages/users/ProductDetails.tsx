@@ -6,14 +6,13 @@ import { useNavigate } from 'react-router-dom';
 const ProductDetails = () => {
     const { id } = useParams();
     const [product, setProduct] = useState<any>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchProduct = async () => {
             try {
                 const res = await axios.get(`http://localhost:5000/api/products/product_desc/${id}`);
                 setProduct(res.data);
-                // console.log(res.data);
-
             } catch (error) {
                 console.error('Error fetching product:', error);
             }
@@ -26,25 +25,30 @@ const ProductDetails = () => {
 
     const handleChatClick = () => {
         const buyerId = sessionStorage.getItem('userId');
-        const sellerId = product.sellerId;
+        const sellerId = product.sellerId._id;
         const productId = product._id;
         
-        console.log(`buyerId: ${buyerId}, sellerId: ${sellerId}, productId: ${productId}`);
+        if (!buyerId) {
+            navigate('/login');
+            return;
+        }
 
-        // const navigate = useNavigate();
-
-        // const handleChatClick = () => {
-        //     navigate(`/chat/${productId}/${buyerId}/${sellerId}`);
-        // };
-
-    }
+        if (buyerId === sellerId) {
+            console.warn('Seller cannot chat with themselves');
+            return;
+        }
 
 
+        if (buyerId && sellerId && productId) {
+            navigate(`/chat/${productId}/${buyerId}/${sellerId}`);
+        } else {
+            console.error('Missing required IDs for chat');
+        }
+    };
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-10">
             <div className="flex flex-col md:flex-row items-start gap-10">
-
                 {/* Product Image */}
                 <div className="w-full md:w-1/2">
                     <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden shadow-md">
@@ -72,15 +76,16 @@ const ProductDetails = () => {
                         <button className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition">
                             Place Order
                         </button>
-                        <button className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition" onClick={handleChatClick}>
+                        <button 
+                            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition" 
+                            onClick={handleChatClick}
+                        >
                             Chat with Seller
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-
-
     );
 };
 

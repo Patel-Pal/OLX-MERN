@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Pencil, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const AddProduct = () => {
   const [formData, setFormData] = useState({
@@ -13,8 +14,9 @@ const AddProduct = () => {
   const [message, setMessage] = useState('');
   const [products, setProducts] = useState([]);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
-
   const token = sessionStorage.getItem('token');
+  const currentUserId = sessionStorage.getItem('userId');
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -26,7 +28,7 @@ const AddProduct = () => {
     }
   };
 
-  //add or update product
+  // Add or update product
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -70,21 +72,38 @@ const AddProduct = () => {
     }
   };
 
-
-  //fetch seller's products
+  // Fetch seller's products and check for chats
   const fetchMyProducts = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/products/mine', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProducts(res.data);
-      // console.log(res.data);
+      const products = res.data;
+
+      // Check for chats for each product
+      const productsWithChatStatus:any = await Promise.all(
+        products.map(async (product: any) => {
+          try {
+            const chatRes = await axios.get(`http://localhost:5000/api/chat/${product._id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const hasChat = chatRes.data.messages.some((msg: any) => msg.senderId._id !== currentUserId);
+            return { ...product, hasChat };
+          } catch (error) {
+            console.error(`Error checking chat for product ${product._id}:`, error);
+            return { ...product, hasChat: false };
+          }
+        })
+      );
+
+      setProducts(productsWithChatStatus);
     } catch (err) {
-      console.error('Error fetching products', err);
+      console.error('Error fetching products:', err);
+      setMessage('Error fetching products');
     }
   };
 
-  //edit product
+  // Edit product
   const handleEdit = (prod: any) => {
     setEditingProductId(prod._id);
     setFormData({
@@ -95,7 +114,7 @@ const AddProduct = () => {
     });
   };
 
-  //delete product
+  // Delete product
   const handleDelete = async (id: string) => {
     try {
       await axios.delete(`http://localhost:5000/api/products/${id}`, {
@@ -103,14 +122,45 @@ const AddProduct = () => {
       });
       fetchMyProducts();
     } catch (error) {
-      console.error('Delete failed', error);
+      console.error('Delete failed:', error);
+      setMessage('Error deleting product');
     }
   };
 
-  //call fetchMyProducts 
+  // Fetch buyerId for a product's chat
+  const handleChatClick = async (productId: string) => {
+    if (!currentUserId) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const res = await axios.get(`http://localhost:5000/api/chat/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const message = res.data.messages.find((msg: any) => msg.senderId._id !== currentUserId);
+      const buyerId = message ? message.senderId._id : null;
+
+      if (buyerId) {
+        console.log('Navigating to chat:', { productId, buyerId, sellerId: currentUserId });
+        navigate(`/chat/${productId}/${buyerId}/${currentUserId}`);
+      } else {
+        setMessage('No chat initiated for this product yet');
+      }
+    } catch (error) {
+      console.error('Error fetching chat for product:', error);
+      setMessage('Error accessing chat');
+    }
+  };
+
+  // Call fetchMyProducts
   useEffect(() => {
-    fetchMyProducts();
-  }, []);
+    if (currentUserId && token) {
+      fetchMyProducts();
+    } else {
+      navigate('/login');
+    }
+  }, [navigate, currentUserId, token]);
 
   return (
     <>
@@ -184,26 +234,50 @@ const AddProduct = () => {
             {products.map((prod: any) => (
               <li
                 key={prod._id}
-                className="flex flex-col p-4 border rounded-2xl shadow-md bg-white hover:shadow-lg transition-shadow relative"
+                className="flex flex-col p-4 border rounded-2xl shadow-md bg-white hover:shadow-lg transition-shadow"
               >
                 <img
                   src={prod.imageURL}
                   alt={prod.title}
                   className="w-full h-48 object-cover rounded-lg mb-4"
                 />
-                <h3 className="font-semibold text-lg mb-1">{prod.title}</h3>
-                <p className="text-sm text-gray-700 mb-2 flex-1">{prod.description}</p>
-                <div className="mt-auto text-sm text-gray-600 font-medium">
-                  ₹{prod.price} | <span className="capitalize">{prod.category}</span>
+
+                {/* Product title + buttons in same line */}
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-lg">{prod.title}</h3>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleEdit(prod)} className="text-blue-600 hover:text-blue-800">
+                      <Pencil size={18} />
+                    </button>
+                    <button onClick={() => handleDelete(prod._id)} className="text-red-600 hover:text-red-800">
+                      <Trash2 size={18} />
+                    </button>
+                    {prod.hasChat && (
+                      <button
+                        onClick={() => handleChatClick(prod._id)}
+                        className="text-green-600 hover:text-green-800"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div className="absolute top-3 right-3 flex gap-2">
-                  <button onClick={() => handleEdit(prod)} className="text-blue-600 hover:text-blue-800">
-                    <Pencil size={18} />
-                  </button>
-                  <button onClick={() => handleDelete(prod._id)} className="text-red-600 hover:text-red-800">
-                    <Trash2 size={18} />
-                  </button>
+                <p className="text-sm text-gray-700 flex-1">{prod.description}</p>
+                <div className="mt-2 text-sm text-gray-600 font-medium">
+                  ₹{prod.price} | <span className="capitalize">{prod.category}</span>
                 </div>
               </li>
             ))}
