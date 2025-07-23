@@ -1,8 +1,7 @@
 
 
 function Home() {
-  // const name = sessionStorage.getItem('username');
-  // const email = sessionStorage.getItem('email');
+  
   const role = sessionStorage.getItem('role');
 
   return (

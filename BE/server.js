@@ -5,6 +5,8 @@ const path = require('path');
 const connectDB = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
+// const orderRoutes = require('./routes/orderRoutes');
+
 
 dotenv.config();
 connectDB();
@@ -30,6 +32,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
 
 // Socket.IO connection
 io.on('connection', (socket) => {
@@ -38,12 +41,12 @@ io.on('connection', (socket) => {
   // Join a room based on productId, buyerId, and sellerId
   socket.on('joinRoom', ({ productId, buyerId, sellerId }) => {
     if (!productId || !buyerId || !sellerId) {
-      console.error('Invalid joinRoom parameters:', { productId, buyerId, sellerId });
+      // console.error('Invalid joinRoom parameters:', { productId, buyerId, sellerId });
       socket.emit('error', { message: 'Missing required parameters for joining room' });
       return;
     }
     if (buyerId === sellerId) {
-      console.error('Buyer and seller IDs cannot be the same:', { buyerId, sellerId });
+      // console.error('Buyer and seller IDs cannot be the same:', { buyerId, sellerId });
       socket.emit('error', { message: 'Buyer and seller IDs cannot be the same' });
       return;
     }
@@ -52,19 +55,19 @@ io.on('connection', (socket) => {
     const sortedIds = [buyerId, sellerId].sort();
     const room = `${productId}-${sortedIds[0]}-${sortedIds[1]}`;
     socket.join(room);
-    console.log(`User ${socket.id} joined room: ${room}`);
+    // console.log(`User ${socket.id} joined room: ${room}`);
   });
 
   // Handle sending messages
   socket.on('sendMessage', async ({ productId, senderId, receiverId, message }) => {
     try {
       if (!productId || !senderId || !receiverId || !message) {
-        console.error('Invalid sendMessage parameters:', { productId, senderId, receiverId, message });
+        // console.error('Invalid sendMessage parameters:', { productId, senderId, receiverId, message });
         socket.emit('error', { message: 'Missing required parameters for sending message' });
         return;
       }
       if (senderId === receiverId) {
-        console.error('Sender and receiver IDs cannot be the same:', { senderId, receiverId });
+        // console.error('Sender and receiver IDs cannot be the same:', { senderId, receiverId });
         socket.emit('error', { message: 'Sender and receiver IDs cannot be the same' });
         return;
       }
@@ -79,7 +82,7 @@ io.on('connection', (socket) => {
 
       const sortedIds = [senderId, receiverId].sort();
       const room = `${productId}-${sortedIds[0]}-${sortedIds[1]}`;
-      console.log(`Emitting message to room: ${room}`, populatedMessage);
+      // console.log(`Emitting message to room: ${room}`, populatedMessage);
       io.to(room).emit('receiveMessage', populatedMessage);
     } catch (error) {
       console.error('Error saving message:', error);

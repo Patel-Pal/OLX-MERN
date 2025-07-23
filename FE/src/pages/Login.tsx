@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,17 +22,18 @@ const Login = () => {
       sessionStorage.setItem('email', res.data.user.email);
       sessionStorage.setItem('role', res.data.user.role);
       sessionStorage.setItem('userId', res.data.user._id);
-      console.log('userId', res.data.user._id);
+      // console.log('userId', res.data.user._id);
+
       if (res.data.user.role === 'admin') {
-        setTimeout(() => navigate('/statistics'), 100);
+         navigate('/statistics')
       }else{
 
-        setTimeout(() => navigate('/'), 100);
+        navigate('/')
       }
 
 
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Login failed');
+      toast.error(err.response?.data?.message || 'Login failed');
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 interface Stats {
   totalProducts: number;
@@ -79,7 +80,7 @@ const AdminDashboard: React.FC = () => {
       fetchStats();
     } catch (err) {
       console.error('Delete failed:', err);
-      alert('Failed to delete');
+      toast.error('Failed to load dashboard stats');
     }
   };
 
@@ -155,11 +156,11 @@ const AdminDashboard: React.FC = () => {
                       <td className="py-2 px-4">{(item as Product).sellerId?.name || '-'}</td>
                       <td className="py-2 px-4">
                         <span className={`px-3 py-1 rounded-full text-white text-xs ${(item as Product).isSold ? 'bg-red-500' : 'bg-green-500'}`}>
-                          {(item as Product).isSold ? 'Inactive' : 'Active'}
+                          {(item as Product).isSold ? 'Sold' : 'Active'}
                         </span>
                       </td>
                       <td className="py-2 px-4">
-                        <div className="flex items-center gap-3">
+                        {/* <div className="flex items-center gap-3"> */}
                           <button onClick={() => toggleStatus('products', item._id)}>
                             {(item as Product).isSold
                               ? <ToggleLeft className="text-red-500" />
@@ -169,7 +170,7 @@ const AdminDashboard: React.FC = () => {
                           <button onClick={() => deleteItem('products', item._id)}>
                             <Trash2 className="text-gray-500 hover:text-red-600" />
                           </button>
-                        </div>
+                        {/* </div> */}
                       </td>
 
                     </>

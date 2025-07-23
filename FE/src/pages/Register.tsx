@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -32,10 +33,10 @@ const Register = () => {
   const handleSubmit = async (values: any) => {
     try {
       await axiosInstance.post('/auth/register', values);
-      alert('Registration successful!');
+      toast.success('Registration successful!');
       navigate('/login');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Registration failed');
+      toast.error(err.response?.data?.message || 'Registration failed');
     }
   };
 

@@ -29,7 +29,7 @@ const ProductDetails = () => {
         const buyerId = sessionStorage.getItem('userId');
         const sellerId = product.sellerId._id;
         const productId = product._id;
-        
+
         if (!buyerId) {
             navigate('/login');
             return;
@@ -72,20 +72,25 @@ const ProductDetails = () => {
                         <p><span className="font-medium text-gray-700">Category:</span> {product.category}</p>
                         <p><span className="font-medium text-gray-700">Seller:</span> {product.sellerId?.name} ({product.sellerId?.email})</p>
                     </div>
-        
+
                     {/* Buttons */}
-            { role !== 'seller' &&
-                    <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                        <button className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition">
-                            Place Order
-                        </button>
-                        <button 
-                            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition" 
-                            onClick={handleChatClick}
-                        >
-                            Chat with {product.sellerId?.name}
-                        </button>
-                    </div>
+                    {role !== 'seller' &&
+                        <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                            
+                            <button
+                                onClick={() => navigate(`/order/${id}`)}
+                                className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition"
+                            >
+                                Place Order
+                            </button>
+
+                            <button
+                                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
+                                onClick={handleChatClick}
+                            >
+                                Chat with {product.sellerId?.name}
+                            </button>
+                        </div>
                     }
                 </div>
             </div>

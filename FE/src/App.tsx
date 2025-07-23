@@ -1,14 +1,15 @@
 import AppRoutes from './routes/AppRoutes';
 import { AuthProvider } from './context/AuthContext';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 function App() {
+
   return (
     <AuthProvider>
-      <Navbar />
-      <AppRoutes />
-      <Footer />
+      <ToastContainer />
+        <AppRoutes />   
     </AuthProvider>
   );
 }
