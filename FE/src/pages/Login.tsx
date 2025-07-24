@@ -3,8 +3,8 @@ import * as Yup from 'yup';
 import axiosInstance from '../api/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FcGoogle } from 'react-icons/fc';
-import { FaGithub } from 'react-icons/fa';
+// import { FcGoogle } from 'react-icons/fc';
+// import { FaGithub } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -88,7 +88,7 @@ const Login = () => {
           <hr className="w-full border-gray-300" />
         </div>
 
-        {/* Social Login Buttons */}
+        {/* Social Login Buttons
         <button className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-md hover:bg-gray-100 transition mb-2">
           <FcGoogle size={20} />
           Continue with Google
@@ -96,7 +96,7 @@ const Login = () => {
         <button className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-md hover:bg-gray-100 transition mb-4">
           <FaGithub size={20} />
           Continue with GitHub
-        </button>
+        </button> */}
 
         {/* Signup Link */}
         <p className="text-center text-sm text-gray-600">

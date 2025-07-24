@@ -2,8 +2,8 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axiosInstance from '../api/axiosInstance';
 import { useNavigate } from 'react-router-dom';
-import { FcGoogle } from 'react-icons/fc';
-import { FaGithub } from 'react-icons/fa';
+// import { FcGoogle } from 'react-icons/fc';
+// import { FaGithub } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -110,7 +110,7 @@ const Register = () => {
         </div>
 
         {/* OAuth buttons */}
-        <div className="flex justify-center gap-4 mb-4">
+        {/* <div className="flex justify-center gap-4 mb-4">
           <button className="flex items-center gap-2 border px-4 py-2 rounded-md hover:bg-gray-100 transition">
             <FcGoogle size={20} />
             <span className="text-sm text-gray-700">Google</span>
@@ -119,7 +119,7 @@ const Register = () => {
             <FaGithub size={20} />
             <span className="text-sm text-gray-700">GitHub</span>
           </button>
-        </div>
+        </div> */}
 
         {/* Already have account */}
         <p className="text-sm text-center text-gray-600">

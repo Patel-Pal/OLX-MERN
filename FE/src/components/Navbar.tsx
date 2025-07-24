@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaUserCircle } from 'react-icons/fa';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 interface JwtPayload {
   id: string;
@@ -198,7 +198,10 @@ const Navbar = () => {
             </>
           )}
           {token && profileData.role === 'admin' && (
-            <Link to="/Statistics" className="hover:text-blue-600">Statistics</Link>
+            <>
+              <Link to="/graph" className="hover:text-blue-600">Graph's</Link>
+              <Link to="/statistics" className="hover:text-blue-600">Dashboard</Link>
+            </>
           )}
           {token && profileData.role === 'buyer' && (
             <Link to="/orders" className="hover:text-blue-600">Orders</Link>
@@ -260,7 +263,10 @@ const Navbar = () => {
           <Link to="/all-products" className="block hover:text-blue-600">Products</Link>
 
           {token && profileData.role === 'admin' && (
-            <Link to="/Statistics" className="block hover:text-blue-600">Statistics</Link>
+            <>
+              <Link to="/graph" className="block hover:text-blue-600">Graph's</Link>
+              <Link to="/statistics" className="hover:text-blue-600">Dashboard</Link>
+            </>
           )}
           {token && profileData.role === 'buyer' && (
             <Link to="/orders" className="block hover:text-blue-600">Orders</Link>

@@ -12,6 +12,7 @@ import Footer from '../components/Footer';
 import NotFound from '../pages/NotFound';
 import ManageOrders from '../pages/seller/ManageOrders';
 import OrderPage from '../pages/users/OrderPage';
+import AdminAnalytics from '../pages/admin/AdminAnalytics';
 
 export default function AppRoutes() {
   const token = sessionStorage.getItem('token');
@@ -29,13 +30,18 @@ export default function AppRoutes() {
         <Route path="/all-products" element={<AllProducts />} />
         <Route path='/product/:id' element={<ProductDetails />} />
         <Route path='/add-product' element={role == "seller" ? <AddProduct /> : <Navigate to={"/not-found"} />} />
-        <Route path="/statistics" element={role === 'admin' ? <AdminStatistictics /> : <Navigate to={"/not-found"} />} />
+
 
         <Route path="/chat/:productId/:buyerId/:sellerId" element={token ? <ChatPage /> : <Navigate to={"/login"} />} />
 
-        <Route path="/manage-orders" element={role === 'seller' ? <ManageOrders /> : <Navigate to={"/not-found"}/>} />
-        <Route path="/order/:id" element={token ? <OrderPage /> : <Navigate to={"/login"}/>} />
-        <Route path="/orders" element={token && role === 'buyer' ? <OrderPage /> : <Navigate to={"/login"}/>} />
+        <Route path="/manage-orders" element={role === 'seller' ? <ManageOrders /> : <Navigate to={"/not-found"} />} />
+        <Route path="/order/:id" element={token ? <OrderPage /> : <Navigate to={"/login"} />} />
+        <Route path="/orders" element={token && role === 'buyer' ? <OrderPage /> : <Navigate to={"/login"} />} />
+
+        {/*  Admin Routes */}
+        <Route path="/statistics" element={role === 'admin' ? <AdminStatistictics /> : <Navigate to={"/not-found"} />} />
+        <Route path="/graph" element={role === 'admin' ? <AdminAnalytics /> : <Navigate to={"/not-found"} />} />
+
 
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />

@@ -7,6 +7,7 @@ interface Stats {
   totalProducts: number;
   totalBuyers: number;
   totalSellers: number;
+  totalRevenue: number;
 }
 
 interface Product {
@@ -29,70 +30,81 @@ interface User {
   isActive: boolean;
 }
 
-type ViewType = 'products' | 'buyer' | 'seller' | null;
+interface SoldOrder {
+  _id: string;
+  productId: { title: string; price: number };
+  buyerId: { name: string };
+  sellerId: { name: string };
+  billDetails: { amount: number; currency: string; paymentDate: Date };
+}
+
+type ViewType = 'products' | 'buyer' | 'seller' | 'revenue' | null;
 
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<Stats>({
     totalProducts: 0,
     totalBuyers: 0,
     totalSellers: 0,
+    totalRevenue: 0,
   });
   const [view, setView] = useState<ViewType>(null);
-  const [tableData, setTableData] = useState<(Product | User)[]>([]);
+  const [tableData, setTableData] = useState<(Product | User | SoldOrder)[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   const token = sessionStorage.getItem('token');
 
   const fetchStats = async () => {
-    const res = await axios.get<Stats>('http://localhost:5000/api/admin/stats', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    setStats(res.data);
+    try {
+      const res = await axios.get<Stats>('http://localhost:5000/api/admin/stats', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStats(res.data);
+    } catch (err) {
+      toast.error('Failed to fetch dashboard stats');
+    }
   };
 
   const fetchTable = async (type: ViewType) => {
     if (!type) return;
-    const url = type === 'products'
-      ? 'products'
-      : `users/${type}`;
-    const res = await axios.get<(Product | User)[]>(`http://localhost:5000/api/admin/${url}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    setTableData(res.data);
-    setCurrentPage(1); // Reset to first page
-    setView(type);
+    const url = type === 'products' ? 'products' : type === 'revenue' ? 'revenue' : `users/${type}`;
+    try {
+      const res = await axios.get<(Product | User | SoldOrder)[]>(`http://localhost:5000/api/admin/${url}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTableData(res.data);
+      setCurrentPage(1);
+      setView(type);
+    } catch (err) {
+      toast.error(`Failed to fetch ${type} data`);
+    }
   };
 
   const deleteItem = async (type: 'products' | 'users', id: string) => {
-    // const confirmed = window.confirm('Are you sure you want to delete this item?');
-    // if (!confirmed) return;
-
-    const url = type === 'products'
-      ? `product/${id}`
-      : `user/${id}`;
-
+    const url = type === 'products' ? `product/${id}` : `user/${id}`;
     try {
       await axios.delete(`http://localhost:5000/api/admin/${url}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (view) fetchTable(view);
       fetchStats();
+      toast.success('Item deleted successfully');
     } catch (err) {
-      console.error('Delete failed:', err);
-      toast.error('Failed to load dashboard stats');
+      toast.error('Failed to delete item');
     }
   };
 
-
   const toggleStatus = async (type: 'products' | 'users', id: string) => {
-    const url = type === 'products'
-      ? `product/${id}/toggle`
-      : `user/${id}/toggle`;
-    await axios.put(`http://localhost:5000/api/admin/${url}`, {}, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (view) fetchTable(view);
+    const url = type === 'products' ? `product/${id}/toggle` : `user/${id}/toggle`;
+    try {
+      await axios.put(`http://localhost:5000/api/admin/${url}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (view) fetchTable(view);
+      toast.success('Status updated successfully');
+    } catch (err) {
+      toast.error('Failed to update status');
+    }
   };
 
   useEffect(() => {
@@ -109,10 +121,11 @@ const AdminDashboard: React.FC = () => {
     <div className="p-4 sm:p-6 md:p-8">
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         <Card label="Total Products" count={stats.totalProducts} onClick={() => fetchTable('products')} />
         <Card label="Total Buyers" count={stats.totalBuyers} onClick={() => fetchTable('buyer')} />
         <Card label="Total Sellers" count={stats.totalSellers} onClick={() => fetchTable('seller')} />
+        <Card label="Total Revenue" count={stats.totalRevenue} prefix="₹" onClick={() => fetchTable('revenue')} />
       </div>
 
       {view && (
@@ -131,12 +144,20 @@ const AdminDashboard: React.FC = () => {
                     <th className="py-2 px-4 text-left">Status</th>
                     <th className="py-2 px-4 text-left">Action</th>
                   </>
+                ) : view === 'revenue' ? (
+                  <>
+                    <th className="py-2 px-4 text-left">Product</th>
+                    <th className="py-2 px-4 text-left">Buyer</th>
+                    <th className="py-2 px-4 text-left">Seller</th>
+                    <th className="py-2 px-4 text-left">Amount</th>
+                    <th className="py-2 px-4 text-left">Date</th>
+                  </>
                 ) : (
                   <>
                     <th className="py-2 px-4 text-left">Name</th>
                     <th className="py-2 px-4 text-left">Email</th>
                     <th className="py-2 px-4 text-left">Address</th>
-                    <th className="py-2 px-4 text-left">Mno</th>
+                    <th className="py-2 px-4 text-left">Phone</th>
                     <th className="py-2 px-4 text-left">Role</th>
                     <th className="py-2 px-4 text-left">Status</th>
                     <th className="py-2 px-4 text-left">Action</th>
@@ -160,19 +181,21 @@ const AdminDashboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-2 px-4">
-                        {/* <div className="flex items-center gap-3"> */}
-                          <button onClick={() => toggleStatus('products', item._id)}>
-                            {(item as Product).isSold
-                              ? <ToggleLeft className="text-red-500" />
-                              : <ToggleRight className="text-green-500" />}
-                          </button>
-
-                          <button onClick={() => deleteItem('products', item._id)}>
-                            <Trash2 className="text-gray-500 hover:text-red-600" />
-                          </button>
-                        {/* </div> */}
+                        <button onClick={() => toggleStatus('products', item._id)} className="mr-2">
+                          {(item as Product).isSold ? <ToggleLeft className="text-red-500" /> : <ToggleRight className="text-green-500" />}
+                        </button>
+                        <button onClick={() => deleteItem('products', item._id)}>
+                          <Trash2 className="text-gray-500 hover:text-red-600" />
+                        </button>
                       </td>
-
+                    </>
+                  ) : view === 'revenue' ? (
+                    <>
+                      <td className="py-2 px-4">{(item as SoldOrder).productId.title}</td>
+                      <td className="py-2 px-4">{(item as SoldOrder).buyerId.name}</td>
+                      <td className="py-2 px-4">{(item as SoldOrder).sellerId.name}</td>
+                      <td className="py-2 px-4">₹{(item as SoldOrder).billDetails.amount}</td>
+                      <td className="py-2 px-4">{new Date((item as SoldOrder).billDetails.paymentDate).toLocaleDateString()}</td>
                     </>
                   ) : (
                     <>
@@ -198,7 +221,6 @@ const AdminDashboard: React.FC = () => {
             </tbody>
           </table>
 
-          {/* Pagination UI */}
           {totalPages > 1 && (
             <div className="flex justify-center items-center gap-2 mt-4">
               <button
@@ -235,16 +257,17 @@ const AdminDashboard: React.FC = () => {
 interface CardProps {
   label: string;
   count: number;
+  prefix?: string;
   onClick: () => void;
 }
 
-const Card: React.FC<CardProps> = ({ label, count, onClick }) => (
+const Card: React.FC<CardProps> = ({ label, count, prefix = '', onClick }) => (
   <div
     onClick={onClick}
     className="bg-white rounded-2xl shadow-md p-6 cursor-pointer hover:shadow-lg transition"
   >
     <h3 className="text-lg font-semibold text-gray-700">{label}</h3>
-    <p className="text-3xl font-bold text-indigo-600 mt-2">{count}</p>
+    <p className="text-3xl font-bold text-indigo-600 mt-2">{prefix}{count}</p>
   </div>
 );
 
