@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['buyer', 'seller', 'admin'], default: 'buyer' },
   phoneNumber: { type: String, required: true },
   address: { type: String, required: true },
+  profileImage: { type: String, default: '' }, // Added profileImage field
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 

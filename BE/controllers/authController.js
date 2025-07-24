@@ -1,6 +1,16 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const cloudinary = require('cloudinary').v2;
+const fs = require('fs').promises;
+
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
+});
+
 
 // Register
 exports.register = async (req, res) => {
@@ -52,10 +62,15 @@ exports.login = async (req, res) => {
 };
 
 // Update user profile
+// In authController.js
 exports.updateProfile = async (req, res) => {
   try {
     const { name, phoneNumber, address } = req.body;
     const userId = req.user.id;
+    let profileImage = '';
+
+    // console.log('Request body:', req.body);
+    // console.log('Request file:', req.file);
 
     // Validation
     if (!name || !phoneNumber || !address) {
@@ -68,11 +83,34 @@ exports.updateProfile = async (req, res) => {
       return res.status(400).json({ message: 'Phone number must be exactly 10 digits' });
     }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { name, phoneNumber, address },
-      { new: true }
-    );
+    // Handle image upload
+    if (req.file) {
+      // console.log('Uploading file to Cloudinary:', req.file.path);
+      try {
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: 'profile_images',
+          transformation: [{ width: 200, height: 200, crop: 'fill' }],
+        });
+        profileImage = result.secure_url;
+        await fs.unlink(req.file.path).catch((err) => console.error('Error deleting file:', err));
+      } catch (error) {
+        console.error('Cloudinary upload error:', {
+          message: error.message,
+          name: error.name,
+          http_code: error.http_code,
+          stack: error.stack,
+        });
+        await fs.unlink(req.file.path).catch((err) => console.error('Error deleting file:', err));
+        return res.status(500).json({ message: 'Failed to upload image', error: error.message });
+      }
+    }
+
+    const updateData = { name, phoneNumber, address };
+    if (profileImage) {
+      updateData.profileImage = profileImage;
+    }
+
+    const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
 
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -81,8 +119,14 @@ exports.updateProfile = async (req, res) => {
       name: user.name,
       phoneNumber: user.phoneNumber,
       address: user.address,
+      profileImage: user.profileImage,
     });
   } catch (err) {
+    console.error('Update profile error:', {
+      message: err.message,
+      name: err.name,
+      stack: err.stack,
+    });
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
@@ -91,19 +135,18 @@ exports.updateProfile = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(userId).select('-password');
     if (!user) {
-      console.error('User not found for ID:', req.user.id);
+      console.error('User not found for ID:', userId);
       return res.status(404).json({ message: 'User not found' });
     }
-    // const user = await User.findById(userId).select('name email phoneNumber address role');
-    // if (!user) return res.status(404).json({ message: 'User not found' });
     res.status(200).json({
       name: user.name,
       email: user.email,
       phoneNumber: user.phoneNumber,
       address: user.address,
       role: user.role,
+      profileImage: user.profileImage,
     });
   } catch (err) {
     console.error('Get profile error:', err);

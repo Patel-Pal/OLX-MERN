@@ -5,6 +5,7 @@ const path = require('path');
 const connectDB = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
+const multer = require('multer');
 
 // const orderRoutes = require('./routes/orderRoutes');
 
@@ -17,6 +18,13 @@ if (!process.env.STRIPE_SECRET_KEY) {
   process.exit(1);
 }
 
+// Validate Cloudinary configuration
+if (!process.env.CLOUD_NAME || !process.env.CLOUD_API_KEY || !process.env.CLOUD_API_SECRET) {
+  console.error('Error: Cloudinary configuration is missing in the .env file');
+  process.exit(1);
+}
+
+
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 connectDB();
@@ -28,6 +36,26 @@ const io = new Server(server, {
     origin: 'http://localhost:5173',
     methods: ['GET', 'POST'],
     credentials: true,
+  },
+});
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images are allowed'), false);
+    }
   },
 });
 

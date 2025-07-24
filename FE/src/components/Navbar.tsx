@@ -11,6 +11,7 @@ interface JwtPayload {
   name: string;
   phoneNumber: string;
   address: string;
+  profileImage?: string; // Added profileImage to JWT payload
 }
 
 const Navbar = () => {
@@ -25,11 +26,13 @@ const Navbar = () => {
     role: '',
     phoneNumber: '',
     address: '',
+    profileImage: '', // Added profileImage to state
   });
   const [editData, setEditData] = useState({
     name: '',
     phoneNumber: '',
     address: '',
+    profileImage: null as File | null, // Added profileImage to edit state
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,11 +56,13 @@ const Navbar = () => {
           role: decoded.role || '',
           phoneNumber: decoded.phoneNumber || '',
           address: decoded.address || '',
+          profileImage: decoded.profileImage || '',
         });
         setEditData({
           name: decoded.name || '',
           phoneNumber: decoded.phoneNumber || '',
           address: decoded.address || '',
+          profileImage: null,
         });
       } catch (err) {
         setError('Failed to decode token. Please log in again.');
@@ -83,11 +88,13 @@ const Navbar = () => {
             role: data.role || '',
             phoneNumber: data.phoneNumber || '',
             address: data.address || '',
+            profileImage: data.profileImage || '',
           });
           setEditData({
             name: data.name || '',
             phoneNumber: data.phoneNumber || '',
             address: data.address || '',
+            profileImage: null,
           });
         } else {
           setError(data.message || 'Failed to fetch profile data. Using token data.');
@@ -112,72 +119,82 @@ const Navbar = () => {
   const toggleProfile = () => setShowProfile((prev) => !prev);
 
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditData({ ...editData, [e.target.name]: e.target.value });
+    if (e.target.name === 'profileImage') {
+      const file = e.target.files?.[0] || null;
+      setEditData({ ...editData, profileImage: file });
+    } else {
+      setEditData({ ...editData, [e.target.name]: e.target.value });
+    }
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
+  e.preventDefault();
+  setError(null);
+  setSuccess(null);
 
-    // Validation
-    if (!editData.name.trim()) {
-      setError('Name is required');
-      return;
-    }
-    if (!editData.phoneNumber.trim()) {
-      setError('Phone number is required');
-      return;
-    }
-    if (!/^\d{10}$/.test(editData.phoneNumber)) {
-      setError('Phone number must be exactly 10 digits');
-      return;
-    }
-    if (!editData.address.trim()) {
-      setError('Address is required');
-      return;
+  // Validation
+  if (!editData.name.trim()) {
+    setError('Name is required');
+    return;
+  }
+  if (!editData.phoneNumber.trim()) {
+    setError('Phone number is required');
+    return;
+  }
+  if (!/^\d{10}$/.test(editData.phoneNumber)) {
+    setError('Phone number must be exactly 10 digits');
+    return;
+  }
+  if (!editData.address.trim()) {
+    setError('Address is required');
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('name', editData.name);
+    formData.append('phoneNumber', editData.phoneNumber);
+    formData.append('address', editData.address);
+    if (editData.profileImage) {
+      formData.append('profileImage', editData.profileImage);
     }
 
-    try {
-      const response = await fetch('http://localhost:5000/api/auth/update-profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: editData.name,
-          phoneNumber: editData.phoneNumber,
-          address: editData.address,
-        }),
+    const response = await fetch('http://localhost:5000/api/auth/update-profile', {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      setProfileData((prev) => ({
+        ...prev,
+        name: data.name,
+        phoneNumber: data.phoneNumber,
+        address: data.address,
+        profileImage: data.profileImage || prev.profileImage,
+      }));
+      setEditData({
+        name: data.name,
+        phoneNumber: data.phoneNumber,
+        address: data.address,
+        profileImage: null,
       });
-
-      const data = await response.json();
-      if (response.ok) {
-        setProfileData((prev) => ({
-          ...prev,
-          name: data.name,
-          phoneNumber: data.phoneNumber,
-          address: data.address,
-        }));
-        setEditData({
-          name: data.name,
-          phoneNumber: data.phoneNumber,
-          address: data.address,
-        });
-        setSuccess('Profile updated successfully');
-        setTimeout(() => {
-          setShowEditPopup(false);
-          setSuccess(null);
-        }, 1500);
-      } else {
-        setError(data.message || 'Failed to update profile');
-      }
-    } catch (err) {
-      setError('Network error. Please try again later.');
-      console.error('Error updating profile:', err);
+      setSuccess('Profile updated successfully');
+      setTimeout(() => {
+        setShowEditPopup(false);
+        setSuccess(null);
+      }, 1500);
+    } else {
+      setError(data.message || 'Failed to update profile');
     }
-  };
+  } catch (err) {
+    setError('Network error. Please try again later.');
+    console.error('Error updating profile:', err);
+  }
+};
 
   return (
     <nav className="bg-white shadow-md">
@@ -225,7 +242,15 @@ const Navbar = () => {
           {token && (
             <div className="relative">
               <button onClick={toggleProfile}>
-                <FaUserCircle className="text-3xl text-gray-700 hover:text-blue-600 transition" />
+                {profileData.profileImage ? (
+                  <img
+                    src={profileData.profileImage}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <FaUserCircle className="text-3xl text-gray-700 hover:text-blue-600 transition" />
+                )}
               </button>
 
               {showProfile && (
@@ -237,11 +262,18 @@ const Navbar = () => {
                     <p className="text-sm text-red-500">{error}</p>
                   ) : (
                     <>
+                      {profileData.profileImage && (
+                        <img
+                          src={profileData.profileImage}
+                          alt="Profile"
+                          className="w-16 h-16 rounded-full mx-auto mb-2 object-cover"
+                        />
+                      )}
                       <p className="text-sm text-gray-600"><span className="font-medium">Name:</span> {profileData.name}</p>
                       <p className="text-sm text-gray-600"><span className="font-medium">Email:</span> {profileData.email}</p>
                       <p className="text-sm text-gray-600"><span className="font-medium">Role:</span> {profileData.role}</p>
-                      <p className="text-sm text-gray-600"><span className="font-medium">Phone:</span> {profileData.phoneNumber}</p>
-                      <p className="text-sm text-gray-600"><span className="font-medium">Address:</span> {profileData.address}</p>
+                      {/* <p className="text-sm text-gray-600"><span className="font-medium">Phone:</span> {profileData.phoneNumber}</p>
+                      <p className="text-sm text-gray-600"><span className="font-medium">Address:</span> {profileData.address}</p> */}
                     </>
                   )}
                   <button
@@ -290,7 +322,15 @@ const Navbar = () => {
           {token && (
             <div className="mt-4 border-t pt-2">
               <div className="flex items-center space-x-2">
-                <FaUserCircle className="text-2xl text-gray-600" />
+                {profileData.profileImage ? (
+                  <img
+                    src={profileData.profileImage}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <FaUserCircle className="text-2xl text-gray-600" />
+                )}
                 <div>
                   {loading ? (
                     <p className="text-sm text-gray-600">Loading profile...</p>
@@ -301,8 +341,8 @@ const Navbar = () => {
                       <p className="text-sm font-medium text-gray-700">{profileData.name}</p>
                       <p className="text-xs text-gray-500">{profileData.email}</p>
                       <p className="text-xs text-gray-500">{profileData.role}</p>
-                      <p className="text-xs text-gray-500">{profileData.phoneNumber}</p>
-                      <p className="text-xs text-gray-500">{profileData.address}</p>
+                      {/* <p className="text-xs text-gray-500">{profileData.phoneNumber}</p>
+                      <p className="text-xs text-gray-500">{profileData.address}</p> */}
                     </>
                   )}
                   <button
@@ -345,6 +385,13 @@ const Navbar = () => {
                 onChange={handleEditChange}
                 className="w-full px-3 py-2 border rounded text-sm"
                 placeholder="Address"
+              />
+              <input
+                type="file"
+                name="profileImage"
+                accept="image/*"
+                onChange={handleEditChange}
+                className="w-full px-3 py-2 border rounded text-sm"
               />
               <div className="flex justify-end gap-2 pt-2">
                 <button
