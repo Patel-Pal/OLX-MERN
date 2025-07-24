@@ -1,7 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaUserCircle } from 'react-icons/fa';
+import {jwtDecode} from 'jwt-decode';
+
+interface JwtPayload {
+  id: string;
+  email: string;
+  role: string;
+  name: string;
+  phoneNumber: string;
+  address: string;
+}
 
 const Navbar = () => {
   const { logout } = useAuth();
@@ -9,31 +19,125 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
-  const [editData, setEditData] = useState({
-    name: sessionStorage.getItem('username') || '',
-    email: sessionStorage.getItem('email') || '',
-    phoneNumber: sessionStorage.getItem('phoneNumber') || '',
-    address: sessionStorage.getItem('address') || '',
+  const [profileData, setProfileData] = useState({
+    name: '',
+    email: '',
+    role: '',
+    phoneNumber: '',
+    address: '',
   });
-
-  const role = sessionStorage.getItem('role') || '';
-  const name = sessionStorage.getItem('username') || '';
-  const email = sessionStorage.getItem('email') || '';
+  const [editData, setEditData] = useState({
+    name: '',
+    phoneNumber: '',
+    address: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const token = sessionStorage.getItem('token');
+
+  // Decode token and fetch profile data on mount
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!token) {
+        setError('No authentication token found. Please log in again.');
+        return;
+      }
+
+      // Decode token as initial data
+      try {
+        const decoded: JwtPayload = jwtDecode(token);
+        setProfileData({
+          name: decoded.name || '',
+          email: decoded.email || '',
+          role: decoded.role || '',
+          phoneNumber: decoded.phoneNumber || '',
+          address: decoded.address || '',
+        });
+        setEditData({
+          name: decoded.name || '',
+          phoneNumber: decoded.phoneNumber || '',
+          address: decoded.address || '',
+        });
+      } catch (err) {
+        setError('Failed to decode token. Please log in again.');
+        console.error('Token decode error:', err);
+        return;
+      }
+
+      // Fetch latest profile data from API
+      setLoading(true);
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/profile', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setProfileData({
+            name: data.name || '',
+            email: data.email || '',
+            role: data.role || '',
+            phoneNumber: data.phoneNumber || '',
+            address: data.address || '',
+          });
+          setEditData({
+            name: data.name || '',
+            phoneNumber: data.phoneNumber || '',
+            address: data.address || '',
+          });
+        } else {
+          setError(data.message || 'Failed to fetch profile data. Using token data.');
+        }
+      } catch (err) {
+        setError('Network error. Using token data.');
+        console.error('Error fetching profile:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) fetchProfileData();
+  }, [token]);
 
   const handleLogout = () => {
     logout();
+    sessionStorage.removeItem('token');
     navigate('/login');
   };
 
-  const toggleProfile = () => setShowProfile(prev => !prev);
+  const toggleProfile = () => setShowProfile((prev) => !prev);
 
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    // Validation
+    if (!editData.name.trim()) {
+      setError('Name is required');
+      return;
+    }
+    if (!editData.phoneNumber.trim()) {
+      setError('Phone number is required');
+      return;
+    }
+    if (!/^\d{10}$/.test(editData.phoneNumber)) {
+      setError('Phone number must be exactly 10 digits');
+      return;
+    }
+    if (!editData.address.trim()) {
+      setError('Address is required');
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:5000/api/auth/update-profile', {
         method: 'PUT',
@@ -50,14 +154,27 @@ const Navbar = () => {
 
       const data = await response.json();
       if (response.ok) {
-        sessionStorage.setItem('username', editData.name);
-        sessionStorage.setItem('phoneNumber', editData.phoneNumber);
-        sessionStorage.setItem('address', editData.address);
-        setShowEditPopup(false);
+        setProfileData((prev) => ({
+          ...prev,
+          name: data.name,
+          phoneNumber: data.phoneNumber,
+          address: data.address,
+        }));
+        setEditData({
+          name: data.name,
+          phoneNumber: data.phoneNumber,
+          address: data.address,
+        });
+        setSuccess('Profile updated successfully');
+        setTimeout(() => {
+          setShowEditPopup(false);
+          setSuccess(null);
+        }, 1500);
       } else {
-        console.error(data.message);
+        setError(data.message || 'Failed to update profile');
       }
     } catch (err) {
+      setError('Network error. Please try again later.');
       console.error('Error updating profile:', err);
     }
   };
@@ -74,15 +191,19 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center space-x-4">
-          {role !== 'admin' && (
+          {profileData.role !== 'admin' && (
             <>
               <Link to="/" className="hover:text-blue-600">Home</Link>
               <Link to="/all-products" className="hover:text-blue-600">Products</Link>
             </>
           )}
-          {token && role === 'admin' && <Link to="/Statistics" className="hover:text-blue-600">Statistics</Link>}
-          {token && role === 'buyer' && <Link to="/orders" className="hover:text-blue-600">Orders</Link>}
-          {token && role === 'seller' && (
+          {token && profileData.role === 'admin' && (
+            <Link to="/Statistics" className="hover:text-blue-600">Statistics</Link>
+          )}
+          {token && profileData.role === 'buyer' && (
+            <Link to="/orders" className="hover:text-blue-600">Orders</Link>
+          )}
+          {token && profileData.role === 'seller' && (
             <>
               <Link to="/add-product" className="hover:text-blue-600">Add Product</Link>
               <Link to="/manage-orders" className="hover:text-blue-600">Manage Orders</Link>
@@ -107,13 +228,23 @@ const Navbar = () => {
               {showProfile && (
                 <div className="absolute right-0 mt-2 w-64 bg-white border rounded-xl shadow-lg p-4 z-50">
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">Your Profile</h3>
-                  <p className="text-sm text-gray-600"><span className="font-medium">Name:</span> {name}</p>
-                  <p className="text-sm text-gray-600"><span className="font-medium">Email:</span> {email}</p>
-                  <p className="text-sm text-gray-600"><span className="font-medium">Role:</span> {role}</p>
-                  <p className="text-sm text-gray-600"><span className="font-medium">Phone:</span> {editData.phoneNumber}</p>
-                  <p className="text-sm text-gray-600"><span className="font-medium">Address:</span> {editData.address}</p>
-                  <button onClick={() => setShowEditPopup(true)}
-                    className="mt-4 w-full bg-black text-white py-1 rounded hover:bg-red-600 transition">
+                  {loading ? (
+                    <p className="text-sm text-gray-600">Loading profile...</p>
+                  ) : error ? (
+                    <p className="text-sm text-red-500">{error}</p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-gray-600"><span className="font-medium">Name:</span> {profileData.name}</p>
+                      <p className="text-sm text-gray-600"><span className="font-medium">Email:</span> {profileData.email}</p>
+                      <p className="text-sm text-gray-600"><span className="font-medium">Role:</span> {profileData.role}</p>
+                      <p className="text-sm text-gray-600"><span className="font-medium">Phone:</span> {profileData.phoneNumber}</p>
+                      <p className="text-sm text-gray-600"><span className="font-medium">Address:</span> {profileData.address}</p>
+                    </>
+                  )}
+                  <button
+                    onClick={() => setShowEditPopup(true)}
+                    className="mt-4 w-full bg-black text-white py-1 rounded hover:bg-red-600 transition"
+                  >
                     Edit Profile
                   </button>
                 </div>
@@ -128,12 +259,16 @@ const Navbar = () => {
           <Link to="/" className="block hover:text-blue-600">Home</Link>
           <Link to="/all-products" className="block hover:text-blue-600">Products</Link>
 
-          {token && role === 'admin' && <Link to="/Statistics" className="block hover:text-blue-600">Statistics</Link>}
-          {token && role === 'buyer' && <Link to="/orders" className="block hover:text-blue-600">Orders</Link>}
-          {token && role === 'seller' && (
+          {token && profileData.role === 'admin' && (
+            <Link to="/Statistics" className="block hover:text-blue-600">Statistics</Link>
+          )}
+          {token && profileData.role === 'buyer' && (
+            <Link to="/orders" className="block hover:text-blue-600">Orders</Link>
+          )}
+          {token && profileData.role === 'seller' && (
             <>
               <Link to="/add-product" className="block hover:text-blue-600">Add Product</Link>
-              <Link to="/manage-orders" className="block hover:text-blue-600">Manage Product</Link>
+              <Link to="/manage-orders" className="block hover:text-blue-600">Manage Orders</Link>
             </>
           )}
 
@@ -151,12 +286,25 @@ const Navbar = () => {
               <div className="flex items-center space-x-2">
                 <FaUserCircle className="text-2xl text-gray-600" />
                 <div>
-                  <p className="text-sm font-medium text-gray-700">{name}</p>
-                  <p className="text-xs text-gray-500">{email}</p>
-                  <p className="text-xs text-gray-500">{role}</p>
-                  <p className="text-xs text-gray-500">{editData.phoneNumber}</p>
-                  <p className="text-xs text-gray-500">{editData.address}</p>
-                  <button className="mt-1 w-full bg-black text-white rounded" onClick={() => setShowEditPopup(true)}>Edit Profile</button>
+                  {loading ? (
+                    <p className="text-sm text-gray-600">Loading profile...</p>
+                  ) : error ? (
+                    <p className="text-sm text-red-500">{error}</p>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium text-gray-700">{profileData.name}</p>
+                      <p className="text-xs text-gray-500">{profileData.email}</p>
+                      <p className="text-xs text-gray-500">{profileData.role}</p>
+                      <p className="text-xs text-gray-500">{profileData.phoneNumber}</p>
+                      <p className="text-xs text-gray-500">{profileData.address}</p>
+                    </>
+                  )}
+                  <button
+                    className="mt-1 w-full bg-black text-white rounded"
+                    onClick={() => setShowEditPopup(true)}
+                  >
+                    Edit Profile
+                  </button>
                 </div>
               </div>
             </div>
@@ -168,6 +316,8 @@ const Navbar = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
           <div className="bg-white p-4 sm:p-6 rounded-lg w-full max-w-sm sm:w-96">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">Edit Profile</h2>
+            {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+            {success && <p className="text-green-500 text-sm mb-2">{success}</p>}
             <form onSubmit={handleEditSubmit} className="space-y-3">
               <input
                 name="name"
@@ -175,11 +325,6 @@ const Navbar = () => {
                 onChange={handleEditChange}
                 className="w-full px-3 py-2 border rounded text-sm"
                 placeholder="Name"
-              />
-              <input
-                value={editData.email}
-                disabled
-                className="w-full px-3 py-2 border rounded bg-gray-100 cursor-not-allowed text-sm"
               />
               <input
                 name="phoneNumber"
@@ -198,15 +343,16 @@ const Navbar = () => {
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowEditPopup(false)}
+                  onClick={() => {
+                    setShowEditPopup(false);
+                    setError(null);
+                    setSuccess(null);
+                  }}
                   className="px-4 py-1 bg-gray-300 text-sm rounded"
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1 bg-blue-600 text-white text-sm rounded"
-                >
+                <button type="submit" className="px-4 py-1 bg-blue-600 text-white text-sm rounded">
                   Save
                 </button>
               </div>

@@ -41,7 +41,7 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
+      { id: user._id, email: user.email, role: user.role, name: user.name, phoneNumber: user.phoneNumber, address: user.address },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
@@ -57,6 +57,17 @@ exports.updateProfile = async (req, res) => {
     const { name, phoneNumber, address } = req.body;
     const userId = req.user.id;
 
+    // Validation
+    if (!name || !phoneNumber || !address) {
+      return res.status(400).json({ message: 'Name, phone number, and address are required' });
+    }
+    if (name.length < 2) {
+      return res.status(400).json({ message: 'Name must be at least 2 characters long' });
+    }
+    if (!/^\d{10}$/.test(phoneNumber)) {
+      return res.status(400).json({ message: 'Phone number must be exactly 10 digits' });
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
       { name, phoneNumber, address },
@@ -65,7 +76,12 @@ exports.updateProfile = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    res.json({ message: 'Profile updated', name: user.name, phoneNumber: user.phoneNumber, address: user.address });
+    res.json({
+      message: 'Profile updated',
+      name: user.name,
+      phoneNumber: user.phoneNumber,
+      address: user.address,
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -77,9 +93,15 @@ exports.getProfile = async (req, res) => {
     const userId = req.user.id;
     const user = await User.findById(userId).select('name email phoneNumber address role');
     if (!user) return res.status(404).json({ message: 'User not found' });
-    res.status(200).json(user);
+    res.status(200).json({
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      address: user.address,
+      role: user.role,
+    });
   } catch (err) {
+    console.error('Get profile error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
-
