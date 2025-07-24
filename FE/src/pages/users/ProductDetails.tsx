@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const ProductDetails = () => {
     const { id } = useParams();
@@ -31,6 +32,7 @@ const ProductDetails = () => {
         const productId = product._id;
 
         if (!buyerId) {
+            toast.error('Please Login In to chat');
             navigate('/login');
             return;
         }

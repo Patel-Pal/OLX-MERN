@@ -112,7 +112,7 @@ exports.createCheckoutSession = async (req, res) => {
 exports.confirmPayment = async (req, res) => {
   try {
     const { sessionId } = req.body;
-    console.log('Confirming payment for sessionId:', sessionId); // Log sessionId
+    // console.log('Confirming payment for sessionId:', sessionId); // Log sessionId
 
     if (!sessionId) {
       console.error('No sessionId provided');

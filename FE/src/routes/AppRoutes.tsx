@@ -34,8 +34,8 @@ export default function AppRoutes() {
         <Route path="/chat/:productId/:buyerId/:sellerId" element={token ? <ChatPage /> : <Navigate to={"/login"} />} />
 
         <Route path="/manage-orders" element={role === 'seller' ? <ManageOrders /> : <Navigate to={"/not-found"}/>} />
-         <Route path="/order/:id" element={token ? <OrderPage /> : <Navigate to={"/login"}/>} />
-
+        <Route path="/order/:id" element={token ? <OrderPage /> : <Navigate to={"/login"}/>} />
+        <Route path="/orders" element={token && role === 'buyer' ? <OrderPage /> : <Navigate to={"/login"}/>} />
 
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
