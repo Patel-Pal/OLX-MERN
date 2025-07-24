@@ -5,10 +5,20 @@ const path = require('path');
 const connectDB = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
+
 // const orderRoutes = require('./routes/orderRoutes');
 
 
 dotenv.config();
+
+// Validate Stripe secret key
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('Error: STRIPE_SECRET_KEY is not defined in the .env file');
+  process.exit(1);
+}
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
 connectDB();
 
 const app = express();
@@ -23,6 +33,7 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
+app.use(express.raw({ type: 'application/json' })); // For Stripe webhook
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
@@ -33,6 +44,39 @@ app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
+
+
+// Stripe webhook endpoint
+app.post('/api/webhook', async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const orderId = session.metadata.orderId;
+    const order = await require('./models/orderModel').findById(orderId);
+    if (order && session.payment_status === 'paid') {
+      order.paymentStatus = 'completed';
+      order.billDetails = {
+        invoiceId: session.payment_intent,
+        amount: session.amount_total / 100,
+        currency: session.currency.toUpperCase(),
+        paymentDate: new Date(),
+      };
+      await order.save();
+    }
+  }
+
+  res.json({ received: true });
+});
+
 
 // Socket.IO connection
 io.on('connection', (socket) => {

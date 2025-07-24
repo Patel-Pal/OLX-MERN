@@ -1,6 +1,14 @@
 const Order = require('../models/orderModel');
 const Product = require('../models/productModel');
 const mongoose = require('mongoose');
+const stripe = require('stripe');
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('Error: STRIPE_SECRET_KEY is not defined in the .env file');
+  process.exit(1);
+}
+
+const stripeInstance = stripe(process.env.STRIPE_SECRET_KEY);
 
 // Create order
 exports.createOrder = async (req, res) => {
@@ -33,6 +41,130 @@ exports.createOrder = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
+// Create Stripe checkout session
+exports.createCheckoutSession = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      console.error('Invalid order ID:', orderId);
+      return res.status(400).json({ message: 'Invalid order ID' });
+    }
+
+    const order = await Order.findById(orderId)
+      .populate('productId', 'title price')
+      .populate('buyerId', 'email');
+    
+    if (!order) {
+      console.error('Order not found for ID:', orderId);
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    if (order.status !== 'accepted') {
+      console.error('Order not accepted for ID:', orderId, 'Status:', order.status);
+      return res.status(400).json({ message: 'Order not accepted' });
+    }
+    if (order.paymentStatus === 'completed') {
+      console.error('Payment already completed for order ID:', orderId);
+      return res.status(400).json({ message: 'Payment already completed' });
+    }
+
+    if (!order.productId || !order.productId.title || !order.productId.price) {
+      console.error('Invalid product data for order ID:', orderId, 'Product:', order.productId);
+      return res.status(400).json({ message: 'Invalid product data' });
+    }
+    if (!order.buyerId || !order.buyerId.email) {
+      console.error('Invalid buyer data for order ID:', orderId, 'Buyer:', order.buyerId);
+      return res.status(400).json({ message: 'Invalid buyer data' });
+    }
+
+    const session = await stripeInstance.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'inr',
+            product_data: {
+              name: order.productId.title,
+            },
+            unit_amount: Math.round(order.productId.price * 100), // Ensure integer
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `http://localhost:5173/order/${order.productId._id}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `http://localhost:5173/order/${order.productId._id}`,
+      customer_email: order.buyerId.email,
+      metadata: { orderId: orderId },
+    });
+
+    res.status(200).json({ success: true, sessionId: session.id });
+  } catch (error) {
+    console.error('Error in createCheckoutSession:', error);
+    res.status(500).json({ message: 'Failed to create checkout session', error: error.message });
+  }
+};
+
+
+
+// Confirm payment and generate bill
+exports.confirmPayment = async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    console.log('Confirming payment for sessionId:', sessionId); // Log sessionId
+
+    if (!sessionId) {
+      console.error('No sessionId provided');
+      return res.status(400).json({ message: 'Session ID is required' });
+    }
+
+    const session = await stripeInstance.checkout.sessions.retrieve(sessionId).catch(err => {
+      console.error('Stripe session retrieval error:', err);
+      throw new Error(`Failed to retrieve session: ${err.message}`);
+    });
+
+    const orderId = session.metadata?.orderId;
+    if (!orderId) {
+      console.error('No orderId found in session metadata:', session);
+      return res.status(400).json({ message: 'Order ID not found in session metadata' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      console.error('Invalid orderId in session metadata:', orderId);
+      return res.status(400).json({ message: 'Invalid order ID' });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      console.error('Order not found for ID:', orderId);
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (session.payment_status === 'paid') {
+      order.paymentStatus = 'completed';
+      order.billDetails = {
+        invoiceId: session.payment_intent,
+        amount: session.amount_total / 100,
+        currency: session.currency.toUpperCase(),
+        paymentDate: new Date(),
+      };
+      await order.save();
+      res.status(200).json({ success: true, message: 'Payment confirmed', order });
+    } else {
+      order.paymentStatus = 'failed';
+      await order.save();
+      console.error('Payment not completed for sessionId:', sessionId, 'Payment status:', session.payment_status);
+      return res.status(400).json({ message: 'Payment not completed' });
+    }
+  } catch (error) {
+    console.error('Error in confirmPayment:', error);
+    res.status(500).json({ message: 'Failed to confirm payment', error: error.message });
+  }
+};
+
+
+
 
 // Get buyer's order history
 exports.getBuyerOrders = async (req, res) => {

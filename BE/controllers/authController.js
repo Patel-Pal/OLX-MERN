@@ -91,8 +91,13 @@ exports.updateProfile = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await User.findById(userId).select('name email phoneNumber address role');
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      console.error('User not found for ID:', req.user.id);
+      return res.status(404).json({ message: 'User not found' });
+    }
+    // const user = await User.findById(userId).select('name email phoneNumber address role');
+    // if (!user) return res.status(404).json({ message: 'User not found' });
     res.status(200).json({
       name: user.name,
       email: user.email,
@@ -103,5 +108,25 @@ exports.getProfile = async (req, res) => {
   } catch (err) {
     console.error('Get profile error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Update buyer profile for billing
+exports.updateBuyerProfile = async (req, res) => {
+  try {
+    const { phoneNumber, address } = req.body;
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.phoneNumber = phoneNumber || user.phoneNumber;
+    user.address = address || user.address;
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Profile updated', user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
