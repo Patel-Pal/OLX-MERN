@@ -13,6 +13,8 @@ import NotFound from '../pages/NotFound';
 import ManageOrders from '../pages/seller/ManageOrders';
 import OrderPage from '../pages/users/OrderPage';
 import AdminAnalytics from '../pages/admin/AdminAnalytics';
+import AdminBuyers from '../pages/admin/BuyersDetail';
+import AdminSellers from '../pages/admin/SellerDetails';
 
 export default function AppRoutes() {
   const token = sessionStorage.getItem('token');
@@ -41,8 +43,10 @@ export default function AppRoutes() {
         {/*  Admin Routes */}
         <Route path="/statistics" element={role === 'admin' ? <AdminStatistictics /> : <Navigate to={"/not-found"} />} />
         <Route path="/graph" element={role === 'admin' ? <AdminAnalytics /> : <Navigate to={"/not-found"} />} />
+        <Route path="/buyers-detail" element={role === 'admin' ? <AdminBuyers /> : <Navigate to={"/not-found"} />} />
+        <Route path="/sellers-detail" element={role === 'admin' ? <AdminSellers /> : <Navigate to={"/not-found"} />} />
 
-
+        {/* Authentication Routes */}
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
 

@@ -86,7 +86,7 @@ const AdminAnalytics: React.FC = () => {
 
   // Top products by revenue
   const productRevenue = soldOrders.reduce((acc, order) => {
-    const title = order.productId.title;
+    const title = order.productId?.title;
     acc[title] = (acc[title] || 0) + order.billDetails.amount;
     return acc;
   }, {} as Record<string, number>);

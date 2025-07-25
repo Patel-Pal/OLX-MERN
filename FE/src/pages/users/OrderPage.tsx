@@ -358,7 +358,7 @@ const OrderPage = () => {
                       </p>
                       {order.status === 'accepted' && order.paymentStatus === 'pending' && (
                         <button
-                          onClick={handleProceedToPayment}
+                          onClick={() => navigate(`/order/${order.productId._id}`)}
                           className="mt-2 bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 transition"
                         >
                           Proceed to Payment

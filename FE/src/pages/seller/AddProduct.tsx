@@ -213,11 +213,11 @@ const AddProduct = () => {
             type="file"
             accept="image/*"
             onChange={handleFileChange}
-            className="w-full text-sm file:bg-blue-500 file:text-white file:px-4 file:py-2 file:rounded-xl"
+            className="w-full text-sm file:bg-black file:text-white file:px-4 file:py-2 file:rounded-xl"
           />
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700"
+            className="w-full bg-black text-white py-2 rounded-xl hover:bg-blue-700"
           >
             {editingProductId ? 'Update Product' : 'Add Product'}
           </button>

@@ -216,8 +216,10 @@ const Navbar = () => {
           )}
           {token && profileData.role === 'admin' && (
             <>
-              <Link to="/graph" className="hover:text-blue-600">Graph's</Link>
               <Link to="/statistics" className="hover:text-blue-600">Dashboard</Link>
+              <Link to="/graph" className="hover:text-blue-600">Graph's</Link>
+              <Link to="/sellers-detail" className="block hover:text-blue-600">Seller's detail</Link>
+              <Link to="/buyers-detail" className="block hover:text-blue-600">Buyyer's detail</Link>
             </>
           )}
           {token && profileData.role === 'buyer' && (
@@ -296,8 +298,10 @@ const Navbar = () => {
 
           {token && profileData.role === 'admin' && (
             <>
-              <Link to="/graph" className="block hover:text-blue-600">Graph's</Link>
               <Link to="/statistics" className="hover:text-blue-600">Dashboard</Link>
+              <Link to="/graph" className="block hover:text-blue-600">Graph's</Link>
+              <Link to="/sellers-detail" className="block hover:text-blue-600">Seller's detail</Link>
+              <Link to="/buyers-detail" className="block hover:text-blue-600">Buyyer's detail</Link>
             </>
           )}
           {token && profileData.role === 'buyer' && (
