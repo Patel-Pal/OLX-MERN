@@ -136,6 +136,7 @@ const OrderPage = () => {
   };
 
   const handleProceedToPayment = () => {
+    // console.log('Proceeding to payment for product ID:');
     setShowPopup(true);
   };
 
@@ -357,7 +358,7 @@ const OrderPage = () => {
                       </p>
                       {order.status === 'accepted' && order.paymentStatus === 'pending' && (
                         <button
-                          onClick={() => navigate(`/order/${order.productId._id}`)}
+                          onClick={handleProceedToPayment}
                           className="mt-2 bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 transition"
                         >
                           Proceed to Payment
@@ -575,7 +576,7 @@ const OrderPage = () => {
                       </p>
                       {order.status === 'accepted' && order.paymentStatus === 'pending' && (
                         <button
-                          onClick={() => navigate(`/order/${order.productId._id}`)}
+                          onClick={handleProceedToPayment}
                           className="mt-2 bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 transition"
                         >
                           Proceed to Payment
