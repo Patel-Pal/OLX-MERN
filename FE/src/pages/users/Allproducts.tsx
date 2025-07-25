@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../../src/api/axiosInstance'; // Adjust the import path as necessary
 import { Link } from 'react-router-dom';
 
 interface Product {
@@ -25,7 +25,7 @@ const AllProducts = () => {
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/products/');
+        const res = await axiosInstance.get('/products/');
         setProducts(res.data.products);
       } catch (error) {
         console.error('Error fetching all products:', error);

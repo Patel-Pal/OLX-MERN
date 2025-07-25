@@ -1,7 +1,7 @@
 // OrderPage.tsx
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../api/axiosInstance';
 import { toast } from 'react-toastify';
 import { loadStripe } from '@stripe/stripe-js';
 import jsPDF from 'jspdf';
@@ -29,7 +29,7 @@ const OrderPage = () => {
     const fetchProduct = async () => {
       if (!id) return; // Skip product fetch for /orders
       try {
-        const res = await axios.get(`http://localhost:5000/api/products/product_desc/${id}`);
+        const res = await axiosInstance.get(`/products/product_desc/${id}`);
         setProduct(res.data);
       } catch (error: any) {
         // console.error('Error fetching product:', error);
@@ -45,7 +45,7 @@ const OrderPage = () => {
         return null;
       }
       try {
-        const res = await axios.get(`http://localhost:5000/api/auth/profile`, {
+        const res = await axiosInstance.get(`/auth/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         // console.log('Fetched buyer data:', res.data);
@@ -66,7 +66,7 @@ const OrderPage = () => {
         return;
       }
       try {
-        const res = await axios.get(`http://localhost:5000/api/orders/buyer`, {
+        const res = await axiosInstance.get(`/orders/buyer`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         // console.log('Fetched orders:', res.data.orders);
@@ -80,8 +80,8 @@ const OrderPage = () => {
     const confirmPayment = async (sessionId: string) => {
       try {
         // console.log('Confirming payment with sessionId:', sessionId);
-        const res = await axios.post(
-          `http://localhost:5000/api/orders/confirm-payment`,
+        const res = await axiosInstance.post(
+          `/orders/confirm-payment`,
           { sessionId },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -120,13 +120,13 @@ const OrderPage = () => {
 
   const handlePlaceOrder = async () => {
     try {
-      const res = await axios.post(
-        `http://localhost:5000/api/orders/create`,
+      const res = await axiosInstance.post(
+        `/orders/create`,
         { productId: id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success(res.data.message);
-      await axios.get(`http://localhost:5000/api/orders/buyer`, {
+      await axiosInstance.get(`/orders/buyer`, {
         headers: { Authorization: `Bearer ${token}` },
       }).then(res => setOrders(res.data.orders));
     } catch (error: any) {
@@ -141,8 +141,8 @@ const OrderPage = () => {
 
   const handleUpdateBuyerDetails = async () => {
     try {
-      await axios.put(
-        `http://localhost:5000/api/auth/profile`,
+      await axiosInstance.put(
+        `/auth/profile`,
         { phoneNumber, address },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -160,8 +160,8 @@ const OrderPage = () => {
       if (!currentOrder) return toast.error('No order found for this product');
       // console.log('Sending orderId:', currentOrder._id);
       await handleUpdateBuyerDetails();
-      const res = await axios.post(
-        `http://localhost:5000/api/orders/checkout`,
+      const res = await axiosInstance.post(
+        `/orders/checkout`,
         { orderId: currentOrder._id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -181,6 +181,7 @@ const OrderPage = () => {
     }
   };
 
+  //pdf generation function 
   const generateBill = (order: any, buyerData: any) => {
     const doc = new jsPDF();
     

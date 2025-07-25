@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { useEffect, useState } from 'react';
-import { jwtDecode } from 'jwt-decode'; // ✅ Correct import
+import { jwtDecode } from 'jwt-decode'; 
 
 interface ProfileValues {
   name: string;
@@ -66,7 +66,7 @@ const CompleteProfile = () => {
       email, // Include email so backend knows which user to update
     };
 
-    const res = await axiosInstance.put('http://localhost:5000/api/auth/update-profile', payload, {
+    const res = await axiosInstance.put('/auth/update-profile', payload, {
       headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
     });
 

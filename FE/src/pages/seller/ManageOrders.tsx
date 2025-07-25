@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../api/axiosInstance';
 import { toast } from 'react-toastify';
 
 const ManageOrders = () => {
@@ -15,7 +15,7 @@ const ManageOrders = () => {
 
     const fetchOrders = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/orders/seller`, {
+        const res = await axiosInstance.get(`/orders/seller`, {
           headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
         });
         setOrders(res.data.orders);
@@ -30,13 +30,13 @@ const ManageOrders = () => {
 
   const handleStatusUpdate = async (orderId: string, status: string) => {
     try {
-      const res = await axios.put(
-        `http://localhost:5000/api/orders/${orderId}/status`,
+      const res = await axiosInstance.put(
+        `/orders/${orderId}/status`,
         { status },
         { headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` } }
       );
       toast.success(res.data.message);
-      const ordersRes = await axios.get(`http://localhost:5000/api/orders/seller`, {
+      const ordersRes = await axiosInstance.get(`/orders/seller`, {
         headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
       });
       setOrders(ordersRes.data.orders);

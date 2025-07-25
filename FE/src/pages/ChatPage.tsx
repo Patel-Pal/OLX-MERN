@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../api/axiosInstance';
 import io, { Socket } from 'socket.io-client';
 
 interface Message {
@@ -54,7 +54,7 @@ const ChatPage = () => {
     // Fetch chat history and buyers
     const fetchChatData = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/chat/${productId}`, {
+        const res = await axiosInstance.get(`/chat/${productId}`, {
           headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
         });
         setMessages(res.data.messages);

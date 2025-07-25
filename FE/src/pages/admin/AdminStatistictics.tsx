@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../api/axiosInstance';
 import { Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -56,7 +56,7 @@ const AdminDashboard: React.FC = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get<Stats>('http://localhost:5000/api/admin/stats', {
+      const res = await axiosInstance.get<Stats>('/admin/stats', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStats(res.data);
@@ -69,7 +69,7 @@ const AdminDashboard: React.FC = () => {
     if (!type) return;
     const url = type === 'products' ? 'products' : type === 'revenue' ? 'revenue' : `users/${type}`;
     try {
-      const res = await axios.get<(Product | User | SoldOrder)[]>(`http://localhost:5000/api/admin/${url}`, {
+      const res = await axiosInstance.get<(Product | User | SoldOrder)[]>(`/admin/${url}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTableData(res.data);
@@ -83,7 +83,7 @@ const AdminDashboard: React.FC = () => {
   const deleteItem = async (type: 'products' | 'users', id: string) => {
     const url = type === 'products' ? `product/${id}` : `user/${id}`;
     try {
-      await axios.delete(`http://localhost:5000/api/admin/${url}`, {
+      await axiosInstance.delete(`/admin/${url}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (view) fetchTable(view);
@@ -97,7 +97,7 @@ const AdminDashboard: React.FC = () => {
   const toggleStatus = async (type: 'products' | 'users', id: string) => {
     const url = type === 'products' ? `product/${id}/toggle` : `user/${id}/toggle`;
     try {
-      await axios.put(`http://localhost:5000/api/admin/${url}`, {}, {
+      await axiosInstance.put(`/admin/${url}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (view) fetchTable(view);

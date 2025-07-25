@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../api/axiosInstance';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -46,7 +46,7 @@ const AddProduct = () => {
 
     try {
       if (editingProductId) {
-        await axios.put(`http://localhost:5000/api/products/${editingProductId}`, data, {
+        await axiosInstance.put(`/products/${editingProductId}`, data, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
@@ -55,7 +55,7 @@ const AddProduct = () => {
         setMessage('✅ Product updated successfully!');
         setEditingProductId(null);
       } else {
-        await axios.post('http://localhost:5000/api/products/add', data, {
+        await axiosInstance.post('/products/add', data, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
@@ -75,7 +75,7 @@ const AddProduct = () => {
   // Fetch seller's products and check for chats
   const fetchMyProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/products/mine', {
+      const res = await axiosInstance.get('/products/mine', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const products = res.data;
@@ -84,7 +84,7 @@ const AddProduct = () => {
       const productsWithChatStatus:any = await Promise.all(
         products.map(async (product: any) => {
           try {
-            const chatRes = await axios.get(`http://localhost:5000/api/chat/${product._id}`, {
+            const chatRes = await axiosInstance.get(`/chat/${product._id}`, {
               headers: { Authorization: `Bearer ${token}` },
             });
             const hasChat = chatRes.data.messages.some((msg: any) => msg.senderId._id !== currentUserId);
@@ -117,7 +117,7 @@ const AddProduct = () => {
   // Delete product
   const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:5000/api/products/${id}`, {
+      await axiosInstance.delete(`/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchMyProducts();
@@ -135,7 +135,7 @@ const AddProduct = () => {
     }
 
     try {
-      const res = await axios.get(`http://localhost:5000/api/chat/${productId}`, {
+      const res = await axiosInstance.get(`/chat/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const message = res.data.messages.find((msg: any) => msg.senderId._id !== currentUserId);

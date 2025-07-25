@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../api/axiosInstance';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Title, Tooltip, Legend } from 'chart.js';
 import { toast } from 'react-toastify';
@@ -31,7 +31,7 @@ const AdminAnalytics: React.FC = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get<Stats>('http://localhost:5000/api/admin/stats', {
+      const res = await axiosInstance.get<Stats>('/admin/stats', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStats(res.data);
@@ -42,7 +42,7 @@ const AdminAnalytics: React.FC = () => {
 
   const fetchSoldOrders = async () => {
     try {
-      const res = await axios.get<SoldOrder[]>('http://localhost:5000/api/admin/revenue', {
+      const res = await axiosInstance.get<SoldOrder[]>('/admin/revenue', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSoldOrders(res.data);

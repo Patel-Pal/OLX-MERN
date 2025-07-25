@@ -62,7 +62,6 @@ exports.login = async (req, res) => {
 };
 
 // Update user profile
-// In authController.js
 exports.updateProfile = async (req, res) => {
   try {
     const { name, phoneNumber, address } = req.body;
