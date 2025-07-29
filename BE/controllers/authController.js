@@ -2,6 +2,7 @@ const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cloudinary = require('cloudinary').v2;
+const cloudinary = require('../config/cloudinary');
 const fs = require('fs').promises;
 
 // Cloudinary configuration
@@ -66,10 +67,18 @@ exports.updateProfile = async (req, res) => {
   try {
     const { name, phoneNumber, address } = req.body;
     const userId = req.user.id;
-    let profileImage = '';
+    let profileImage = ''; // Default to empty string
 
-    // console.log('Request body:', req.body);
-    // console.log('Request file:', req.file);
+    console.log('Update profile request:', {
+      userId,
+      body: req.body,
+      file: req.file ? { 
+        originalname: req.file.originalname,
+        path: req.file.path,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      } : 'No file uploaded',
+    });
 
     // Validation
     if (!name || !phoneNumber || !address) {
@@ -82,15 +91,22 @@ exports.updateProfile = async (req, res) => {
       return res.status(400).json({ message: 'Phone number must be exactly 10 digits' });
     }
 
+    // Preserve existing profile image if no new file is uploaded
+    const existingUser = await User.findById(userId).select('profileImage');
+    if (existingUser && existingUser.profileImage) {
+      profileImage = existingUser.profileImage;
+    }
+
     // Handle image upload
     if (req.file) {
-      // console.log('Uploading file to Cloudinary:', req.file.path);
+      console.log('Attempting Cloudinary upload for file:', req.file.path);
       try {
         const result = await cloudinary.uploader.upload(req.file.path, {
           folder: 'profile_images',
           transformation: [{ width: 200, height: 200, crop: 'fill' }],
         });
         profileImage = result.secure_url;
+        console.log('Cloudinary upload success:', { url: profileImage });
         await fs.unlink(req.file.path).catch((err) => console.error('Error deleting file:', err));
       } catch (error) {
         console.error('Cloudinary upload error:', {
@@ -100,18 +116,28 @@ exports.updateProfile = async (req, res) => {
           stack: error.stack,
         });
         await fs.unlink(req.file.path).catch((err) => console.error('Error deleting file:', err));
-        return res.status(500).json({ message: 'Failed to upload image', error: error.message });
+        return res.status(500).json({ message: 'Failed to upload image to Cloudinary', error: error.message });
       }
+    } else {
+      console.log('No file provided; retaining existing profile image:', profileImage);
     }
 
-    const updateData = { name, phoneNumber, address };
-    if (profileImage) {
-      updateData.profileImage = profileImage;
-    }
+    const updateData = { name, phoneNumber, address, profileImage };
+    console.log('Updating user with data:', updateData);
 
     const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) {
+      console.error('User not found for ID:', userId);
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    console.log('Profile updated successfully:', {
+      name: user.name,
+      phoneNumber: user.phoneNumber,
+      address: user.address,
+      profileImage: user.profileImage,
+    });
 
     res.json({
       message: 'Profile updated',
@@ -129,7 +155,6 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
-
 // Get user profile
 exports.getProfile = async (req, res) => {
   try {

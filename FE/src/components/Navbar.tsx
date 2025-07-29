@@ -116,6 +116,7 @@ const Navbar = () => {
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.name === 'profileImage') {
       const file = e.target.files?.[0] || null;
+      console.log('Selected file:', file); // Debug: Log selected file
       setEditData({ ...editData, profileImage: file });
     } else {
       setEditData({ ...editData, [e.target.name]: e.target.value });
@@ -151,17 +152,18 @@ const Navbar = () => {
       formData.append('phoneNumber', editData.phoneNumber);
       formData.append('address', editData.address);
       if (editData.profileImage) {
+        console.log('Appending file to FormData:', editData.profileImage); // Debug: Log file before sending
         formData.append('profileImage', editData.profileImage);
       }
 
       const response = await axiosInstance.put('/auth/update-profile', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          // Note: 'Content-Type' is not set manually for FormData; axios handles it
         },
       });
 
       const data = response.data;
+      console.log('Profile update response:', data); // Debug: Log response
       setProfileData((prev) => ({
         ...prev,
         name: data.name,
@@ -182,7 +184,7 @@ const Navbar = () => {
       }, 1500);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Network error. Please try again later.');
-      console.error('Error updating profile:', err);
+      console.error('Error updating profile:', err.response?.data || err);
     }
   };
 

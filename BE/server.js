@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
 const multer = require('multer');
+const cloudinary = require('./config/cloudinary');
 
 // const orderRoutes = require('./routes/orderRoutes');
 
@@ -38,6 +39,7 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
