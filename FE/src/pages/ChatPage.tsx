@@ -45,7 +45,7 @@ const ChatPage = () => {
     }
 
     // Initialize Socket.IO
-    socketRef.current = io('https://olx-backend-wmkv.onrender.com', {
+    socketRef.current = io(import.meta.env.VITE_API_URL.replace('/api', ''), {
       reconnection: true,
       reconnectionAttempts: 5,
       withCredentials: true,
