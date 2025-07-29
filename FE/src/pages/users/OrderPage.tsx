@@ -443,7 +443,7 @@ const OrderPage = () => {
           </div>
 
           <div className="bg-white shadow-md rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">Buyer Details</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-4">Your Details</h2>
             <div className="space-y-2">
               <p><span className="font-medium">Name:</span> {buyer.name || 'Unknown'}</p>
               <p><span className="font-medium">Email:</span> {buyer.email || 'Unknown'}</p>
