@@ -116,7 +116,7 @@ const Navbar = () => {
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.name === 'profileImage') {
       const file = e.target.files?.[0] || null;
-      console.log('Selected file:', file); // Debug: Log selected file
+      // console.log('Selected file:', file); // Debug: Log selected file
       setEditData({ ...editData, profileImage: file });
     } else {
       setEditData({ ...editData, [e.target.name]: e.target.value });
@@ -152,7 +152,7 @@ const Navbar = () => {
       formData.append('phoneNumber', editData.phoneNumber);
       formData.append('address', editData.address);
       if (editData.profileImage) {
-        console.log('Appending file to FormData:', editData.profileImage); // Debug: Log file before sending
+        // console.log('Appending file to FormData:', editData.profileImage); // Debug: Log file before sending
         formData.append('profileImage', editData.profileImage);
       }
 
@@ -163,7 +163,7 @@ const Navbar = () => {
       });
 
       const data = response.data;
-      console.log('Profile update response:', data); // Debug: Log response
+      // console.log('Profile update response:', data); // Debug: Log response
       setProfileData((prev) => ({
         ...prev,
         name: data.name,

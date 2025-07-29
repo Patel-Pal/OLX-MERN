@@ -147,72 +147,82 @@ const ChatPage = () => {
       )
     : messages;
 
-  return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
-      <button
-        className="mb-4 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition"
-        onClick={() => navigate(-1)}
-      >
-        Back
-      </button>
-      <div className="bg-white shadow-md rounded-xl p-6">
-        <h2 className="text-2xl font-bold mb-4">Chat for Product ID: {productId}</h2>
-        
-        {/* Buyer selection dropdown for seller */}
-        {currentUserId === sellerId && buyers.length > 0 && (
-          <div className="mb-4">
-            <label htmlFor="buyerSelect" className="block text-sm font-medium text-gray-700">
-              Select Buyer
-            </label>
-            <select
-              id="buyerSelect"
-              value={selectedBuyerId || ''}
-              onChange={handleBuyerChange}
-              className="mt-1 block w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-            >
-              {buyers.map((buyer) => (
-                <option key={buyer.id} value={buyer.id}>
-                  {buyer.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+ return (
+  <div className="max-w-xl mx-auto px-3 py-6">
+    <button
+      className="mb-3 bg-gray-600 text-white px-3 py-1.5 rounded hover:bg-gray-700 text-sm"
+      onClick={() => navigate(-1)}
+    >
+      Back
+    </button>
 
-        <div className="h-96 overflow-y-auto mb-4 p-4 bg-gray-100 rounded-md">
-          {filteredMessages.map((msg) => (
-            <div
-              key={msg._id}
-              className={`mb-2 p-2 rounded-md ${
-                msg.senderId._id === currentUserId ? 'bg-blue-100 ml-auto' : 'bg-gray-200 mr-auto'
-              } max-w-[70%]`}
-            >
-              <p className="text-sm font-semibold">{msg.senderId.name}</p>
-              <p>{msg.message}</p>
-              <p className="text-xs text-gray-500">{new Date(msg.createdAt).toLocaleString()}</p>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-            placeholder="Type your message..."
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-          />
-          <button
-            onClick={handleSendMessage}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+    <div className="bg-white shadow rounded-lg p-4">
+      <h2 className="text-lg font-semibold mb-3">
+        Chat - Product ID: {productId}
+      </h2>
+
+      {/* Buyer selection dropdown for seller */}
+      {currentUserId === sellerId && buyers.length > 0 && (
+        <div className="mb-3">
+          <label
+            htmlFor="buyerSelect"
+            className="block text-xs font-medium text-gray-600"
           >
-            Send
-          </button>
+            Select Buyer
+          </label>
+          <select
+            id="buyerSelect"
+            value={selectedBuyerId || ''}
+            onChange={handleBuyerChange}
+            className="mt-1 w-full p-1.5 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            {buyers.map((buyer) => (
+              <option key={buyer.id} value={buyer.id}>
+                {buyer.name}
+              </option>
+            ))}
+          </select>
         </div>
+      )}
+
+      <div className="h-72 overflow-y-auto mb-3 p-2 bg-gray-100 rounded text-sm space-y-2">
+        {filteredMessages.map((msg) => (
+          <div
+            key={msg._id}
+            className={`p-2 rounded-md break-words ${
+              msg.senderId._id === currentUserId
+                ? 'bg-blue-100 ml-auto text-right'
+                : 'bg-gray-200 mr-auto text-left'
+            } max-w-[70%]`}
+          >
+            <p className="font-medium text-xs text-gray-700">{msg.senderId.name}</p>
+            <p className="text-sm">{msg.message}</p>
+            <p className="text-[10px] text-gray-500">{new Date(msg.createdAt).toLocaleTimeString()}</p>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          className="flex-1 p-1.5 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Type a message..."
+          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+        />
+        <button
+          onClick={handleSendMessage}
+          className="bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 text-sm"
+        >
+          Send
+        </button>
       </div>
     </div>
-  );
+  </div>
+);
+
 };
 
 export default ChatPage;

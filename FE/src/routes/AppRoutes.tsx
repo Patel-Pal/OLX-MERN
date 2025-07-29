@@ -22,11 +22,12 @@ export default function AppRoutes() {
   const location = useLocation();
 
   // Paths where you want to hide header/footer
-  const hideLayout = location.pathname === '/not-found';
+  const hideLayout = location.pathname === '/not-found' ;
+  const chatPath = location.pathname.startsWith('/chat/');
 
   return (
     <>
-      {!hideLayout && <Navbar />}
+      {!hideLayout && !chatPath && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/all-products" element={<AllProducts />} />
@@ -53,7 +54,7 @@ export default function AppRoutes() {
 
         <Route path="/not-found" element={<NotFound />} />
       </Routes>
-      {!hideLayout && <Footer />}
+      {!hideLayout && !chatPath && <Footer />}
     </>
   );
 }

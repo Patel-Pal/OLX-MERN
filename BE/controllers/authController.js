@@ -70,17 +70,7 @@ exports.updateProfile = async (req, res) => {
     const userId = req.user.id;
     let profileImage = '';
 
-    console.log('Update profile request:', {
-      userId,
-      body: req.body,
-      headers: req.headers, // Log headers to verify Content-Type
-      file: req.file ? { 
-        originalname: req.file.originalname,
-        path: req.file.path,
-        mimetype: req.file.mimetype,
-        size: req.file.size
-      } : 'No file uploaded',
-    });
+   
 
     // Validation
     if (!name || !phoneNumber || !address) {
@@ -101,14 +91,14 @@ exports.updateProfile = async (req, res) => {
 
     // Handle image upload
     if (req.file) {
-      console.log('Attempting Cloudinary upload for file:', req.file.path);
+      // console.log('Attempting Cloudinary upload for file:', req.file.path);
       try {
         const result = await cloudinary.uploader.upload(req.file.path, {
           folder: 'profile_images',
           transformation: [{ width: 200, height: 200, crop: 'fill' }],
         });
         profileImage = result.secure_url;
-        console.log('Cloudinary upload success:', { url: profileImage });
+        // console.log('Cloudinary upload success:', { url: profileImage });
         await fs.unlink(req.file.path).catch((err) => console.error('Error deleting file:', err));
       } catch (error) {
         console.error('Cloudinary upload error:', {
@@ -121,11 +111,11 @@ exports.updateProfile = async (req, res) => {
         return res.status(500).json({ message: 'Failed to upload image to Cloudinary', error: error.message });
       }
     } else {
-      console.log('No file provided; retaining existing profile image:', profileImage);
+      // console.log('No file provided; retaining existing profile image:', profileImage);
     }
 
     const updateData = { name, phoneNumber, address, profileImage };
-    console.log('Updating user with data:', updateData);
+    // console.log('Updating user with data:', updateData);
 
     const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
 
@@ -134,12 +124,7 @@ exports.updateProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    console.log('Profile updated successfully:', {
-      name: user.name,
-      phoneNumber: user.phoneNumber,
-      address: user.address,
-      profileImage: user.profileImage,
-    });
+    
 
     res.json({
       message: 'Profile updated',
