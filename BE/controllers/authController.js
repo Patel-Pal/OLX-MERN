@@ -63,15 +63,17 @@ exports.login = async (req, res) => {
 };
 
 // Update user profile
+// Update user profile
 exports.updateProfile = async (req, res) => {
   try {
     const { name, phoneNumber, address } = req.body;
     const userId = req.user.id;
-    let profileImage = ''; // Default to empty string
+    let profileImage = '';
 
     console.log('Update profile request:', {
       userId,
       body: req.body,
+      headers: req.headers, // Log headers to verify Content-Type
       file: req.file ? { 
         originalname: req.file.originalname,
         path: req.file.path,
@@ -155,6 +157,8 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+
 // Get user profile
 exports.getProfile = async (req, res) => {
   try {
