@@ -6,7 +6,7 @@ const connectDB = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
 const multer = require('multer');
-// const cloudinary = require('./config/cloudinary');
+
 
 // const orderRoutes = require('./routes/orderRoutes');
 
