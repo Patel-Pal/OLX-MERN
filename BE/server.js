@@ -33,7 +33,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'https://olx-mern-pi.vercel.app/',
+    origin: 'https://olx-mern-pi.vercel.app',
     methods: ['GET', 'POST'],
     credentials: true,
   },
