@@ -89,6 +89,7 @@ const ChatPage = () => {
     if (selectedBuyerId && productId && sellerId) {
       const sortedIds = [selectedBuyerId, sellerId].sort();
       const room = `${productId}-${sortedIds[0]}-${sortedIds[1]}`;
+      console.log('Joining room:', room);
       socketRef.current.emit('joinRoom', { productId, buyerId: selectedBuyerId, sellerId });
     }
 
