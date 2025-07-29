@@ -31,7 +31,7 @@ const server = http.createServer(app);
 // Configure allowed origins for CORS
 const allowedOrigins = [
   'http://localhost:5173',
-  process.env.FRONTEND_URL || 'https://your-frontend.onrender.com', // Replace with your actual frontend URL
+  process.env.FRONTEND_URL || 'https://olx-mern-pi.vercel.app', // Replace with your actual frontend URL
 ].filter(Boolean); // Remove any undefined/null values
 
 const io = new Server(server, {
