@@ -45,7 +45,7 @@ const ChatPage = () => {
     }
 
     // Initialize Socket.IO
-    socketRef.current = io('http://localhost:5000', {
+    socketRef.current = io('https://olx-backend-wmkv.onrender.com', {
       reconnection: true,
       reconnectionAttempts: 5,
       withCredentials: true,
