@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaUserCircle } from 'react-icons/fa';
 import { jwtDecode } from 'jwt-decode';
+import axiosInstance from '../api/axiosInstance';
 
 interface JwtPayload {
   id: string;
@@ -11,7 +12,7 @@ interface JwtPayload {
   name: string;
   phoneNumber: string;
   address: string;
-  profileImage?: string; // Added profileImage to JWT payload
+  profileImage?: string;
 }
 
 const Navbar = () => {
@@ -26,13 +27,13 @@ const Navbar = () => {
     role: '',
     phoneNumber: '',
     address: '',
-    profileImage: '', // Added profileImage to state
+    profileImage: '',
   });
   const [editData, setEditData] = useState({
     name: '',
     phoneNumber: '',
     address: '',
-    profileImage: null as File | null, // Added profileImage to edit state
+    profileImage: null as File | null,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,37 +71,31 @@ const Navbar = () => {
         return;
       }
 
-      // Fetch latest profile data from API
+      // Fetch latest profile data from API using axiosInstance
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:5000/api/auth/profile', {
-          method: 'GET',
+        const response = await axiosInstance.get('/auth/profile', {
           headers: {
-            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
-        const data = await response.json();
-        if (response.ok) {
-          setProfileData({
-            name: data.name || '',
-            email: data.email || '',
-            role: data.role || '',
-            phoneNumber: data.phoneNumber || '',
-            address: data.address || '',
-            profileImage: data.profileImage || '',
-          });
-          setEditData({
-            name: data.name || '',
-            phoneNumber: data.phoneNumber || '',
-            address: data.address || '',
-            profileImage: null,
-          });
-        } else {
-          setError(data.message || 'Failed to fetch profile data. Using token data.');
-        }
-      } catch (err) {
-        setError('Network error. Using token data.');
+        const data = response.data;
+        setProfileData({
+          name: data.name || '',
+          email: data.email || '',
+          role: data.role || '',
+          phoneNumber: data.phoneNumber || '',
+          address: data.address || '',
+          profileImage: data.profileImage || '',
+        });
+        setEditData({
+          name: data.name || '',
+          phoneNumber: data.phoneNumber || '',
+          address: data.address || '',
+          profileImage: null,
+        });
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'Network error. Using token data.');
         console.error('Error fetching profile:', err);
       } finally {
         setLoading(false);
@@ -128,47 +123,45 @@ const Navbar = () => {
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError(null);
-  setSuccess(null);
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
 
-  // Validation
-  if (!editData.name.trim()) {
-    setError('Name is required');
-    return;
-  }
-  if (!editData.phoneNumber.trim()) {
-    setError('Phone number is required');
-    return;
-  }
-  if (!/^\d{10}$/.test(editData.phoneNumber)) {
-    setError('Phone number must be exactly 10 digits');
-    return;
-  }
-  if (!editData.address.trim()) {
-    setError('Address is required');
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    formData.append('name', editData.name);
-    formData.append('phoneNumber', editData.phoneNumber);
-    formData.append('address', editData.address);
-    if (editData.profileImage) {
-      formData.append('profileImage', editData.profileImage);
+    // Validation
+    if (!editData.name.trim()) {
+      setError('Name is required');
+      return;
+    }
+    if (!editData.phoneNumber.trim()) {
+      setError('Phone number is required');
+      return;
+    }
+    if (!/^\d{10}$/.test(editData.phoneNumber)) {
+      setError('Phone number must be exactly 10 digits');
+      return;
+    }
+    if (!editData.address.trim()) {
+      setError('Address is required');
+      return;
     }
 
-    const response = await fetch('http://localhost:5000/api/auth/update-profile', {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+    try {
+      const formData = new FormData();
+      formData.append('name', editData.name);
+      formData.append('phoneNumber', editData.phoneNumber);
+      formData.append('address', editData.address);
+      if (editData.profileImage) {
+        formData.append('profileImage', editData.profileImage);
+      }
 
-    const data = await response.json();
-    if (response.ok) {
+      const response = await axiosInstance.put('/auth/update-profile', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Note: 'Content-Type' is not set manually for FormData; axios handles it
+        },
+      });
+
+      const data = response.data;
       setProfileData((prev) => ({
         ...prev,
         name: data.name,
@@ -187,14 +180,11 @@ const Navbar = () => {
         setShowEditPopup(false);
         setSuccess(null);
       }, 1500);
-    } else {
-      setError(data.message || 'Failed to update profile');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Network error. Please try again later.');
+      console.error('Error updating profile:', err);
     }
-  } catch (err) {
-    setError('Network error. Please try again later.');
-    console.error('Error updating profile:', err);
-  }
-};
+  };
 
   return (
     <nav className="bg-white shadow-md">
@@ -274,8 +264,6 @@ const Navbar = () => {
                       <p className="text-sm text-gray-600"><span className="font-medium">Name:</span> {profileData.name}</p>
                       <p className="text-sm text-gray-600"><span className="font-medium">Email:</span> {profileData.email}</p>
                       <p className="text-sm text-gray-600"><span className="font-medium">Role:</span> {profileData.role}</p>
-                      {/* <p className="text-sm text-gray-600"><span className="font-medium">Phone:</span> {profileData.phoneNumber}</p>
-                      <p className="text-sm text-gray-600"><span className="font-medium">Address:</span> {profileData.address}</p> */}
                     </>
                   )}
                   <button
@@ -345,8 +333,6 @@ const Navbar = () => {
                       <p className="text-sm font-medium text-gray-700">{profileData.name}</p>
                       <p className="text-xs text-gray-500">{profileData.email}</p>
                       <p className="text-xs text-gray-500">{profileData.role}</p>
-                      {/* <p className="text-xs text-gray-500">{profileData.phoneNumber}</p>
-                      <p className="text-xs text-gray-500">{profileData.address}</p> */}
                     </>
                   )}
                   <button
