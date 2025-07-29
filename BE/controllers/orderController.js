@@ -93,8 +93,10 @@ exports.createCheckoutSession = async (req, res) => {
         },
       ],
       mode: 'payment',
-      success_url: `http://localhost:5173/order/${order.productId._id}?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `http://localhost:5173/order/${order.productId._id}`,
+      // success_url: `http://localhost:5173/order/${order.productId._id}?session_id={CHECKOUT_SESSION_ID}`,
+      // cancel_url: `http://localhost:5173/order/${order.productId._id}`,
+      success_url: `https://olx-mern-pi.vercel.app/order/${order.productId._id}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `https://olx-mern-pi.vercel.app/order/${order.productId._id}`,
       customer_email: order.buyerId.email,
       metadata: { orderId: orderId },
     });
