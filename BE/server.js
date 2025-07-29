@@ -7,6 +7,9 @@ const http = require('http');
 const { Server } = require('socket.io');
 const multer = require('multer');
 
+// const orderRoutes = require('./routes/orderRoutes');
+
+
 dotenv.config();
 
 // Validate Stripe secret key
@@ -21,28 +24,16 @@ if (!process.env.CLOUD_NAME || !process.env.CLOUD_API_KEY || !process.env.CLOUD_
   process.exit(1);
 }
 
+
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 connectDB();
 
 const app = express();
 const server = http.createServer(app);
-
-// Configure allowed origins for CORS
-const allowedOrigins = [
-   'https://olx-mern-pi.vercel.app/'
-].filter(Boolean); // Remove any undefined/null values
-// 'http://localhost:5173',
 const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g., mobile apps or curl) or from allowed origins
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: 'https://olx-mern-pi.vercel.app/',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -68,11 +59,7 @@ const upload = multer({
   },
 });
 
-app.use(cors({
-  origin: allowedOrigins,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
-}));
+app.use(cors());
 app.use(express.json());
 app.use(express.raw({ type: 'application/json' })); // For Stripe webhook
 
@@ -85,6 +72,7 @@ app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
+
 
 // Stripe webhook endpoint
 app.post('/api/webhook', async (req, res) => {
@@ -117,6 +105,7 @@ app.post('/api/webhook', async (req, res) => {
   res.json({ received: true });
 });
 
+
 // Socket.IO connection
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
@@ -124,10 +113,12 @@ io.on('connection', (socket) => {
   // Join a room based on productId, buyerId, and sellerId
   socket.on('joinRoom', ({ productId, buyerId, sellerId }) => {
     if (!productId || !buyerId || !sellerId) {
+      // console.error('Invalid joinRoom parameters:', { productId, buyerId, sellerId });
       socket.emit('error', { message: 'Missing required parameters for joining room' });
       return;
     }
     if (buyerId === sellerId) {
+      // console.error('Buyer and seller IDs cannot be the same:', { buyerId, sellerId });
       socket.emit('error', { message: 'Buyer and seller IDs cannot be the same' });
       return;
     }
@@ -136,16 +127,19 @@ io.on('connection', (socket) => {
     const sortedIds = [buyerId, sellerId].sort();
     const room = `${productId}-${sortedIds[0]}-${sortedIds[1]}`;
     socket.join(room);
+    // console.log(`User ${socket.id} joined room: ${room}`);
   });
 
   // Handle sending messages
   socket.on('sendMessage', async ({ productId, senderId, receiverId, message }) => {
     try {
       if (!productId || !senderId || !receiverId || !message) {
+        // console.error('Invalid sendMessage parameters:', { productId, senderId, receiverId, message });
         socket.emit('error', { message: 'Missing required parameters for sending message' });
         return;
       }
       if (senderId === receiverId) {
+        // console.error('Sender and receiver IDs cannot be the same:', { senderId, receiverId });
         socket.emit('error', { message: 'Sender and receiver IDs cannot be the same' });
         return;
       }
@@ -160,6 +154,7 @@ io.on('connection', (socket) => {
 
       const sortedIds = [senderId, receiverId].sort();
       const room = `${productId}-${sortedIds[0]}-${sortedIds[1]}`;
+      // console.log(`Emitting message to room: ${room}`, populatedMessage);
       io.to(room).emit('receiveMessage', populatedMessage);
     } catch (error) {
       console.error('Error saving message:', error);
