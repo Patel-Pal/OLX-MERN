@@ -369,6 +369,7 @@ const Navbar = () => {
                 onChange={handleEditChange}
                 className="w-full px-3 py-2 border rounded text-sm"
                 placeholder="Phone Number"
+                pattern="\d{10}"
               />
               <input
                 name="address"

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
-import { Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import {  ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+// for delete icon 
+// import { Trash2 } from 'lucide-react';
 
 interface Stats {
   totalProducts: number;
@@ -80,19 +83,20 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const deleteItem = async (type: 'products' | 'users', id: string) => {
-    const url = type === 'products' ? `product/${id}` : `user/${id}`;
-    try {
-      await axiosInstance.delete(`/admin/${url}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (view) fetchTable(view);
-      fetchStats();
-      toast.success('Item deleted successfully');
-    } catch (err) {
-      toast.error('Failed to delete item');
-    }
-  };
+  // deleteItem 
+  // const deleteItem = async (type: 'products' | 'users', id: string) => {
+  //   const url = type === 'products' ? `product/${id}` : `user/${id}`;
+  //   try {
+  //     await axiosInstance.delete(`/admin/${url}`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     if (view) fetchTable(view);
+  //     fetchStats();
+  //     toast.success('Item deleted successfully');
+  //   } catch (err) {
+  //     toast.error('Failed to delete item');
+  //   }
+  // };
 
   const toggleStatus = async (type: 'products' | 'users', id: string) => {
     const url = type === 'products' ? `product/${id}/toggle` : `user/${id}/toggle`;
@@ -184,9 +188,9 @@ const AdminDashboard: React.FC = () => {
                         <button onClick={() => toggleStatus('products', item._id)} className="mr-2">
                           {(item as Product).isSold ? <ToggleLeft className="text-red-500" /> : <ToggleRight className="text-green-500" />}
                         </button>
-                        <button onClick={() => deleteItem('products', item._id)}>
+                        {/* <button onClick={() => deleteItem('products', item._id)}>
                           <Trash2 className="text-gray-500 hover:text-red-600" />
-                        </button>
+                        </button> */}
                       </td>
                     </>
                   ) : view === 'revenue' ? (
