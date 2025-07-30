@@ -8,7 +8,7 @@ const { authenticate, verifyAdmin } = require('../middleware/authMiddleware');
 // Get admin dashboard stats
 router.get('/stats', authenticate, verifyAdmin, async (req, res) => {
   try {
-    const totalProducts = await Product.countDocuments({ isSold: false });
+    const totalProducts = await Product.countDocuments({ isActive: true });
     const totalBuyers = await User.countDocuments({ role: 'buyer' });
     const totalSellers = await User.countDocuments({ role: 'seller' });
     const totalRevenue = await Order.aggregate([
@@ -76,7 +76,6 @@ router.get('/buyers', authenticate, verifyAdmin, async (req, res) => {
 });
 
 // Get all sellers with their listed products and total revenue
-
 router.get('/sellers', authenticate, verifyAdmin, async (req, res) => {
   try {
     const totalSellers = await User.countDocuments({ role: 'seller' });
@@ -89,7 +88,7 @@ router.get('/sellers', authenticate, verifyAdmin, async (req, res) => {
     const sellerIds = sellers.map(seller => seller._id);
 
     const products = await Product.find({ sellerId: { $in: sellerIds } })
-      .select('title price category isSold sellerId')
+      .select('title price category isSold isActive sellerId')
       .lean();
 
     const orders = await Order.find({
@@ -132,7 +131,6 @@ router.get('/sellers', authenticate, verifyAdmin, async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch seller data' });
   }
 });
-
 
 // Get all users (buyers/sellers)
 router.get('/users/:role', authenticate, verifyAdmin, async (req, res) => {
@@ -196,11 +194,11 @@ router.delete('/product/:id', authenticate, verifyAdmin, async (req, res) => {
   }
 });
 
-// Toggle product visibility (mark as sold or not)
+// Toggle product active status
 router.put('/product/:id/toggle', authenticate, verifyAdmin, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    product.isSold = !product.isSold;
+    product.isActive = !product.isActive;
     await product.save();
     res.json({ success: true, product });
   } catch {

@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema(
     imageURL: { type: String, required: true },
     sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     isSold: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

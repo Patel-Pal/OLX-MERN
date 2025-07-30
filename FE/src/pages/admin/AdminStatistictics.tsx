@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
-import {  ToggleLeft, ToggleRight } from 'lucide-react';
+import { ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'react-toastify';
-
-// for delete icon 
-// import { Trash2 } from 'lucide-react';
 
 interface Stats {
   totalProducts: number;
@@ -18,6 +15,7 @@ interface Product {
   title: string;
   category: string;
   isSold: boolean;
+  isActive: boolean;
   sellerId?: {
     name?: string;
   };
@@ -83,21 +81,6 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  // deleteItem 
-  // const deleteItem = async (type: 'products' | 'users', id: string) => {
-  //   const url = type === 'products' ? `product/${id}` : `user/${id}`;
-  //   try {
-  //     await axiosInstance.delete(`/admin/${url}`, {
-  //       headers: { Authorization: `Bearer ${token}` }
-  //     });
-  //     if (view) fetchTable(view);
-  //     fetchStats();
-  //     toast.success('Item deleted successfully');
-  //   } catch (err) {
-  //     toast.error('Failed to delete item');
-  //   }
-  // };
-
   const toggleStatus = async (type: 'products' | 'users', id: string) => {
     const url = type === 'products' ? `product/${id}/toggle` : `user/${id}/toggle`;
     try {
@@ -145,7 +128,8 @@ const AdminDashboard: React.FC = () => {
                     <th className="py-2 px-4 text-left">Title</th>
                     <th className="py-2 px-4 text-left">Category</th>
                     <th className="py-2 px-4 text-left">Seller</th>
-                    <th className="py-2 px-4 text-left">Status</th>
+                    <th className="py-2 px-4 text-left">Sold Status</th>
+                    <th className="py-2 px-4 text-left">Active Status</th>
                     <th className="py-2 px-4 text-left">Action</th>
                   </>
                 ) : view === 'revenue' ? (
@@ -181,16 +165,18 @@ const AdminDashboard: React.FC = () => {
                       <td className="py-2 px-4">{(item as Product).sellerId?.name || '-'}</td>
                       <td className="py-2 px-4">
                         <span className={`px-3 py-1 rounded-full text-white text-xs ${(item as Product).isSold ? 'bg-red-500' : 'bg-green-500'}`}>
-                          {(item as Product).isSold ? 'Sold' : 'Active'}
+                          {(item as Product).isSold ? 'Sold' : 'Available'}
+                        </span>
+                      </td>
+                      <td className="py-2 px-4">
+                        <span className={`px-3 py-1 rounded-full text-white text-xs ${(item as Product).isActive ? 'bg-green-500' : 'bg-red-500'}`}>
+                          {(item as Product).isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="py-2 px-4">
                         <button onClick={() => toggleStatus('products', item._id)} className="mr-2">
-                          {(item as Product).isSold ? <ToggleLeft className="text-red-500" /> : <ToggleRight className="text-green-500" />}
+                          {(item as Product).isActive ? <ToggleRight className="text-green-500" /> : <ToggleLeft className="text-red-500" />}
                         </button>
-                        {/* <button onClick={() => deleteItem('products', item._id)}>
-                          <Trash2 className="text-gray-500 hover:text-red-600" />
-                        </button> */}
                       </td>
                     </>
                   ) : view === 'revenue' ? (
