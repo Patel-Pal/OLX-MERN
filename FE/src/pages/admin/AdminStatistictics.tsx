@@ -182,8 +182,8 @@ const AdminDashboard: React.FC = () => {
                       <td className="py-2 px-4">{(item as Product).title}</td>
                       <td className="py-2 px-4">{(item as Product).category}</td>
                       <td className="py-2 px-4">{(item as Product).sellerId?.name || '-'}</td>
-                      <td className="py-2 px-4">
-                        <span className={`px-3 py-1 rounded-full text-white text-xs ${(item as Product).isSold ? 'bg-gray-700' : 'text-blue-800'}`}>
+                      <td className="py-2 px-4 ">
+                        <span className={`px-3 py-1 rounded-full text-white text-xs  ${(item as Product).isSold ? 'bg-gray-700' : 'bg-orange-500'}`}>
                           {(item as Product).isSold ? 'Sold' : 'Available'}
                         </span>
                       </td>
