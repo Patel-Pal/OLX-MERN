@@ -15,6 +15,7 @@ interface Product {
   category: string;
   imageURL: string;
   isSold: boolean;
+  isActive: boolean;
 }
 
 const AllProducts = () => {
@@ -39,7 +40,7 @@ const AllProducts = () => {
     fetchAllProducts();
   }, []);
 
-  const filteredProducts = products.filter((product) => !product.isSold);
+  const filteredProducts = products.filter((product) => !product.isSold && product.isActive);
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * itemsPerPage,

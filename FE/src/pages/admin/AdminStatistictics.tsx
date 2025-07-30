@@ -3,6 +3,9 @@ import axiosInstance from '../../api/axiosInstance';
 import { ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 
+// for delete icon 
+// import { Trash2 } from 'lucide-react';
+
 interface Stats {
   totalProducts: number;
   totalBuyers: number;
@@ -104,6 +107,22 @@ const AdminDashboard: React.FC = () => {
     currentPage * itemsPerPage
   );
 
+  
+  // deleteItem 
+  // const deleteItem = async (type: 'products' | 'users', id: string) => {
+  //   const url = type === 'products' ? `product/${id}` : `user/${id}`;
+  //   try {
+  //     await axiosInstance.delete(`/admin/${url}`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     if (view) fetchTable(view);
+  //     fetchStats();
+  //     toast.success('Item deleted successfully');
+  //   } catch (err) {
+  //     toast.error('Failed to delete item');
+  //   }
+  // };
+
   return (
     <div className="p-4 sm:p-6 md:p-8">
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
@@ -164,7 +183,7 @@ const AdminDashboard: React.FC = () => {
                       <td className="py-2 px-4">{(item as Product).category}</td>
                       <td className="py-2 px-4">{(item as Product).sellerId?.name || '-'}</td>
                       <td className="py-2 px-4">
-                        <span className={`px-3 py-1 rounded-full text-white text-xs ${(item as Product).isSold ? 'bg-red-500' : 'bg-green-500'}`}>
+                        <span className={`px-3 py-1 rounded-full text-white text-xs ${(item as Product).isSold ? 'bg-gray-700' : 'text-blue-800'}`}>
                           {(item as Product).isSold ? 'Sold' : 'Available'}
                         </span>
                       </td>
@@ -177,6 +196,9 @@ const AdminDashboard: React.FC = () => {
                         <button onClick={() => toggleStatus('products', item._id)} className="mr-2">
                           {(item as Product).isActive ? <ToggleRight className="text-green-500" /> : <ToggleLeft className="text-red-500" />}
                         </button>
+                         {/* <button onClick={() => deleteItem('products', item._id)}>
+                          <Trash2 className="text-gray-500 hover:text-red-600" />
+                        </button> */}
                       </td>
                     </>
                   ) : view === 'revenue' ? (
