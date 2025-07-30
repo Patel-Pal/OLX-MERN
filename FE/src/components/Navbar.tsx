@@ -40,7 +40,6 @@ const Navbar = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const token = sessionStorage.getItem('token');
 
-  // Decode token and fetch profile data on mount
   useEffect(() => {
     const fetchProfileData = async () => {
       if (!token) {
@@ -48,7 +47,6 @@ const Navbar = () => {
         return;
       }
 
-      // Decode token as initial data
       try {
         const decoded: JwtPayload = jwtDecode(token);
         setProfileData({
@@ -71,7 +69,6 @@ const Navbar = () => {
         return;
       }
 
-      // Fetch latest profile data from API using axiosInstance
       setLoading(true);
       try {
         const response = await axiosInstance.get('/auth/profile', {
@@ -127,7 +124,6 @@ const Navbar = () => {
     setError(null);
     setSuccess(null);
 
-    // Validation
     if (!editData.name.trim()) {
       setError('Name is required');
       return;
@@ -181,8 +177,13 @@ const Navbar = () => {
         setSuccess(null);
       }, 1500);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Network error. Please try again later.');
-      console.error('Error updating profile:', err.response?.data || err);
+      const errorMessage = err.response?.data?.message || 'Failed to update profile. Please try again.';
+      setError(errorMessage);
+      console.error('Error updating profile:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
     }
   };
 

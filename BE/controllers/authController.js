@@ -63,7 +63,8 @@ exports.login = async (req, res) => {
 };
 
 // Update user profile
-// Update user profile
+
+
 exports.updateProfile = async (req, res) => {
   try {
     const { name, phoneNumber, address } = req.body;
@@ -90,7 +91,6 @@ exports.updateProfile = async (req, res) => {
     // Handle image upload
     if (req.file) {
       try {
-        // Use stream upload similar to product upload
         const streamUpload = (buffer) => {
           return new Promise((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(
@@ -112,7 +112,6 @@ exports.updateProfile = async (req, res) => {
 
         const result = await streamUpload(req.file.buffer);
         profileImage = result.secure_url;
-        await fs.unlink(req.file.path).catch((err) => console.error('Error deleting file:', err));
       } catch (error) {
         console.error('Cloudinary upload error:', {
           message: error.message,
@@ -120,7 +119,6 @@ exports.updateProfile = async (req, res) => {
           http_code: error.http_code,
           stack: error.stack,
         });
-        await fs.unlink(req.file.path).catch((err) => console.error('Error deleting file:', err));
         return res.status(500).json({ message: 'Failed to upload image to Cloudinary', error: error.message });
       }
     }
@@ -149,6 +147,7 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
 
 
 

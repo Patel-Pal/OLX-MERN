@@ -4,15 +4,8 @@ const { register, login, updateProfile, getProfile, updateBuyerProfile } = requi
 const { authenticate, verifyToken } = require('../middleware/authMiddleware');
 const multer = require('multer');
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'Uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
+
+const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
