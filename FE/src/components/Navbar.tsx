@@ -116,7 +116,6 @@ const Navbar = () => {
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.name === 'profileImage') {
       const file = e.target.files?.[0] || null;
-      // console.log('Selected file:', file); // Debug: Log selected file
       setEditData({ ...editData, profileImage: file });
     } else {
       setEditData({ ...editData, [e.target.name]: e.target.value });
@@ -152,18 +151,17 @@ const Navbar = () => {
       formData.append('phoneNumber', editData.phoneNumber);
       formData.append('address', editData.address);
       if (editData.profileImage) {
-        // console.log('Appending file to FormData:', editData.profileImage); // Debug: Log file before sending
         formData.append('profileImage', editData.profileImage);
       }
 
       const response = await axiosInstance.put('/auth/update-profile', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
         },
       });
 
       const data = response.data;
-      // console.log('Profile update response:', data); // Debug: Log response
       setProfileData((prev) => ({
         ...prev,
         name: data.name,

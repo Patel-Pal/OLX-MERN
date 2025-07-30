@@ -70,8 +70,6 @@ exports.updateProfile = async (req, res) => {
     const userId = req.user.id;
     let profileImage = '';
 
-   
-
     // Validation
     if (!name || !phoneNumber || !address) {
       return res.status(400).json({ message: 'Name, phone number, and address are required' });
@@ -91,14 +89,29 @@ exports.updateProfile = async (req, res) => {
 
     // Handle image upload
     if (req.file) {
-      // console.log('Attempting Cloudinary upload for file:', req.file.path);
       try {
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: 'profile_images',
-          transformation: [{ width: 200, height: 200, crop: 'fill' }],
-        });
+        // Use stream upload similar to product upload
+        const streamUpload = (buffer) => {
+          return new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              {
+                folder: 'profile_images',
+                transformation: [{ width: 200, height: 200, crop: 'fill' }],
+              },
+              (error, result) => {
+                if (result) {
+                  resolve(result);
+                } else {
+                  reject(error);
+                }
+              }
+            );
+            stream.end(buffer);
+          });
+        };
+
+        const result = await streamUpload(req.file.buffer);
         profileImage = result.secure_url;
-        // console.log('Cloudinary upload success:', { url: profileImage });
         await fs.unlink(req.file.path).catch((err) => console.error('Error deleting file:', err));
       } catch (error) {
         console.error('Cloudinary upload error:', {
@@ -110,21 +123,15 @@ exports.updateProfile = async (req, res) => {
         await fs.unlink(req.file.path).catch((err) => console.error('Error deleting file:', err));
         return res.status(500).json({ message: 'Failed to upload image to Cloudinary', error: error.message });
       }
-    } else {
-      // console.log('No file provided; retaining existing profile image:', profileImage);
     }
 
     const updateData = { name, phoneNumber, address, profileImage };
-    // console.log('Updating user with data:', updateData);
-
     const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
 
     if (!user) {
       console.error('User not found for ID:', userId);
       return res.status(404).json({ message: 'User not found' });
     }
-
-    
 
     res.json({
       message: 'Profile updated',
@@ -142,6 +149,7 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
 
 
 // Get user profile

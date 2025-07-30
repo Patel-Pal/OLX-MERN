@@ -13,19 +13,6 @@ const cloudinary = require('./config/cloudinary');
 
 dotenv.config();
 
-// Validate Stripe secret key
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.error('Error: STRIPE_SECRET_KEY is not defined in the .env file');
-  process.exit(1);
-}
-
-// Validate Cloudinary configuration
-if (!process.env.CLOUD_NAME || !process.env.CLOUD_API_KEY || !process.env.CLOUD_API_SECRET) {
-  console.error('Error: Cloudinary configuration is missing in the .env file');
-  process.exit(1);
-}
-
-
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 connectDB();
@@ -76,7 +63,7 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 
 
-// Stripe webhook endpoint
+// Stripe Payment
 app.post('/api/webhook', async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
