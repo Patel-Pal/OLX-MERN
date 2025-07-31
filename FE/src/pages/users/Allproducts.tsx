@@ -18,6 +18,18 @@ interface Product {
   isActive: boolean;
 }
 
+const ProductCardSkeleton = () => (
+  <div className="bg-white shadow-md rounded-xl overflow-hidden animate-pulse">
+    <div className="w-full h-48 bg-gray-300"></div>
+    <div className="p-4 space-y-2">
+      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+      <div className="h-3 bg-gray-300 rounded w-2/3"></div>
+      <div className="mt-4 h-9 bg-gray-300 rounded"></div>
+    </div>
+  </div>
+);
+
 const AllProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,7 +64,11 @@ const AllProducts = () => {
       <h2 className="text-3xl font-bold mb-10 text-center">All Products</h2>
 
       {isLoading ? (
-        <div className="text-center text-gray-600 py-20">Loading products...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {[...Array(itemsPerPage)].map((_, idx) => (
+            <ProductCardSkeleton key={idx} />
+          ))}
+        </div>
       ) : filteredProducts.length === 0 ? (
         <div className="text-center text-gray-500 py-20">No products available.</div>
       ) : (
@@ -96,9 +112,7 @@ const AllProducts = () => {
               <button
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 border rounded ${
-                  currentPage === i + 1 ? 'bg-black text-white' : ''
-                }`}
+                className={`px-3 py-1 border rounded ${currentPage === i + 1 ? 'bg-black text-white' : ''}`}
               >
                 {i + 1}
               </button>

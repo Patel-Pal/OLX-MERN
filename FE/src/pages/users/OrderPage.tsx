@@ -26,6 +26,40 @@ const OrderPage = () => {
   const token = sessionStorage.getItem('token');
   const [loading, setLoading] = useState(false);
 
+  const BuyerSkeleton = () => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 animate-pulse">
+    <div className="bg-white shadow-md rounded-lg p-6">
+      <div className="h-6 bg-gray-300 rounded w-1/2 mb-4"></div>
+      <div className="flex flex-col sm:flex-row gap-6">
+        <div className="w-full sm:w-1/3 h-48 bg-gray-300 rounded-md"></div>
+        <div className="flex-1 space-y-3">
+          <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+          <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+          <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+        </div>
+      </div>
+    </div>
+    <div className="bg-white shadow-md rounded-lg p-6 space-y-4">
+      <div className="h-6 bg-gray-300 rounded w-1/2 mb-2"></div>
+      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+      <div className="h-10 bg-gray-300 rounded w-full"></div>
+    </div>
+  </div>
+);
+
+const ProductSkeleton = () => (
+  <div className="bg-white shadow-md rounded-lg p-6 text-center animate-pulse">
+    <div className="h-6 bg-gray-300 rounded w-1/2 mx-auto mb-4"></div>
+    <div className="h-10 bg-gray-300 rounded w-1/3 mx-auto"></div>
+  </div>
+);
+
+
+
+
+
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return; // Skip product fetch for /orders
@@ -307,11 +341,10 @@ const OrderPage = () => {
     doc.save(`invoice_${order.billDetails?.invoiceId || "unknown"}.pdf`);
   }
 };
-
-
   const filteredOrders = orders.filter((order) => order.status === activeTab);
 
-  if (!buyer) return <p className="text-center mt-10">Loading...</p>;
+  if (!buyer) return <BuyerSkeleton />;
+
 
   // Handle /orders route (no product ID)
   if (!id) {
@@ -398,7 +431,8 @@ const OrderPage = () => {
   // Existing logic for /order/:id
   const currentOrder = orders.find((order) => order.productId._id === id);
 
-  if (!product) return <p className="text-center mt-10">Loading...</p>;
+  if (!product) return <ProductSkeleton />;
+
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">

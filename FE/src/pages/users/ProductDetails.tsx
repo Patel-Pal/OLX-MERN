@@ -9,6 +9,30 @@ const ProductDetails = () => {
     const navigate = useNavigate();
     const role = sessionStorage.getItem('role');
 
+    const ProductSkeleton = () => (
+        <div className="max-w-7xl mx-auto px-4 py-10 animate-pulse">
+            <div className="flex flex-col lg:flex-row gap-10">
+                <div className="w-full md:w-1/2">
+                    <div className="w-full aspect-[4/3] bg-gray-300 rounded-xl shadow-md"></div>
+                </div>
+                <div className="w-full lg:w-1/2 space-y-4">
+                    <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-300 rounded w-full"></div>
+                    <div className="h-4 bg-gray-300 rounded w-5/6"></div>
+                    <div className="h-6 bg-gray-300 rounded w-1/3"></div>
+                    <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                    <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+                    <div className="flex gap-4 mt-10">
+                        <div className="h-10 bg-gray-300 rounded w-32"></div>
+                        <div className="h-10 bg-gray-300 rounded w-40"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+
+
     useEffect(() => {
         const fetchProduct = async () => {
             try {
@@ -45,9 +69,8 @@ const ProductDetails = () => {
         }
     };
 
-    if (!product) {
-        return <p className="text-center mt-10 text-gray-600">Loading...</p>;
-    }
+    if (!product) return <ProductSkeleton />;
+
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-10">
