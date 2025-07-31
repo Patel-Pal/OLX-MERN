@@ -10,7 +10,7 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
 
   const handleSendOtp = async (values: any) => {
-    if (loading) return; // prevent multiple rapid clicks
+    if (loading) return; 
     setLoading(true);
     try {
       await axiosInstance.post('/auth/send-otp', { email: values.email });

@@ -87,7 +87,6 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-
 // Update product
 exports.updateProduct = async (req, res) => {
   try {

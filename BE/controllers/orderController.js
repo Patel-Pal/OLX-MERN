@@ -2,12 +2,6 @@ const Order = require('../models/orderModel');
 const Product = require('../models/productModel');
 const mongoose = require('mongoose');
 const stripe = require('stripe');
-
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.error('Error: STRIPE_SECRET_KEY is not defined in the .env file');
-  process.exit(1);
-}
-
 const stripeInstance = stripe(process.env.STRIPE_SECRET_KEY);
 
 // Create order
@@ -41,7 +35,6 @@ exports.createOrder = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
 
 // Create Stripe checkout session
 exports.createCheckoutSession = async (req, res) => {
@@ -108,8 +101,6 @@ exports.createCheckoutSession = async (req, res) => {
   }
 };
 
-
-
 // Confirm payment and generate bill
 exports.confirmPayment = async (req, res) => {
   try {
@@ -164,9 +155,6 @@ exports.confirmPayment = async (req, res) => {
     res.status(500).json({ message: 'Failed to confirm payment', error: error.message });
   }
 };
-
-
-
 
 // Get buyer's order history
 exports.getBuyerOrders = async (req, res) => {

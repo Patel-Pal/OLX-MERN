@@ -36,20 +36,21 @@ export default function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/all-products" element={<AllProducts />} />
         <Route path='/product/:id' element={<ProductDetails />} />
+
+        {/* Seller Routes */}
         <Route path='/add-product' element={role == "seller" ? <AddProduct /> : <Navigate to={"/not-found"} />} />
-
-
-        <Route path="/chat/:productId/:buyerId/:sellerId" element={token ? <ChatPage /> : <Navigate to={"/login"} />} />
-
         <Route path="/manage-orders" element={role === 'seller' ? <ManageOrders /> : <Navigate to={"/not-found"} />} />
-        <Route path="/order/:id" element={token ? <OrderPage /> : <Navigate to={"/login"} />} />
-        <Route path="/orders" element={token && role === 'buyer' ? <OrderPage /> : <Navigate to={"/login"} />} />
 
         {/*  Admin Routes */}
         <Route path="/statistics" element={role === 'admin' ? <AdminStatistictics /> : <Navigate to={"/not-found"} />} />
         <Route path="/graph" element={role === 'admin' ? <AdminAnalytics /> : <Navigate to={"/not-found"} />} />
         <Route path="/buyers-detail" element={role === 'admin' ? <AdminBuyers /> : <Navigate to={"/not-found"} />} />
         <Route path="/sellers-detail" element={role === 'admin' ? <AdminSellers /> : <Navigate to={"/not-found"} />} />
+
+        {/* Common Routes */}
+        <Route path="/order/:id" element={token ? <OrderPage /> : <Navigate to={"/login"} />} />
+        <Route path="/orders" element={token && role === 'buyer' ? <OrderPage /> : <Navigate to={"/login"} />} />
+        <Route path="/chat/:productId/:buyerId/:sellerId" element={token ? <ChatPage /> : <Navigate to={"/login"} />} />
 
         {/* Authentication Routes */}
         <Route path="/register" element={<Register />} />

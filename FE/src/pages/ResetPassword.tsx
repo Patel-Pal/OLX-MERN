@@ -6,13 +6,13 @@ import { toast } from 'react-toastify';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const ResetPassword = () => {
-  const [loading, setLoading] = useState(false); // ✅ Loading state to prevent multiple API calls
+  const [loading, setLoading] = useState(false); 
   const navigate = useNavigate();
   const location = useLocation();
   const prefilledEmail = (location.state as any)?.email || '';
 
   const handleReset = async (values: any) => {
-    if (loading) return; // ✅ Prevent duplicate request
+    if (loading) return; 
     setLoading(true);
     try {
       await axiosInstance.post('/auth/reset-password', values);
@@ -21,7 +21,7 @@ const ResetPassword = () => {
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to reset password');
     } finally {
-      setLoading(false); // ✅ Reset loading state
+      setLoading(false);
     }
   };
 
@@ -46,7 +46,7 @@ const ResetPassword = () => {
               type="email"
               placeholder="Email"
               className="w-full px-4 py-2 border border-gray-300 rounded-md mb-2"
-              disabled // ✅ Read-only email field
+              disabled 
             />
             <ErrorMessage name="email" component="div" className="text-sm text-red-500 mb-2" />
 
@@ -68,7 +68,7 @@ const ResetPassword = () => {
 
             <button
               type="submit"
-              disabled={loading} // ✅ Disable button while API call in progress
+              disabled={loading} 
               className={`w-full text-white py-2 rounded-md transition ${
                 loading
                   ? 'bg-green-400 cursor-not-allowed'

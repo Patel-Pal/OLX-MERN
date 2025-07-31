@@ -9,13 +9,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  
   const [token, setToken] = useState(() => sessionStorage.getItem('token'));
-
   const login = (token: string) => {
-  sessionStorage.setItem('token', token);
-  setToken(token);
-};
+    sessionStorage.setItem('token', token);
+    setToken(token);
+  };
 
 
   const logout = () => {
