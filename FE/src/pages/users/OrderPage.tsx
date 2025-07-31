@@ -8,7 +8,7 @@ import jsPDF from 'jspdf';
 
 // Initialize Stripe with the publishable key from environment variable
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-const role = sessionStorage.getItem('role'); 
+const role = sessionStorage.getItem('role');
 
 const OrderPage = () => {
   const { id } = useParams(); // Product ID, undefined for /orders
@@ -135,6 +135,8 @@ const OrderPage = () => {
     } catch (error: any) {
       console.error('Error placing order:', error);
       toast.error(error.response?.data?.message || 'Failed to place order');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -159,6 +161,8 @@ const OrderPage = () => {
   };
 
   const handleCheckout = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
       const currentOrder = orders.find((order) => order.productId._id === id);
       if (!currentOrder) return toast.error('No order found for this product');
@@ -182,13 +186,15 @@ const OrderPage = () => {
     } catch (error: any) {
       console.error('Error initiating checkout:', error);
       toast.error(error.response?.data?.message || 'Failed to initiate checkout');
+    } finally {
+      setLoading(false);
     }
   };
 
   //pdf generation function 
   const generateBill = (order: any, buyerData: any) => {
     const doc = new jsPDF();
-    
+
     // Set font and colors
     doc.setFont("helvetica", "normal");
     const primaryColor = "#1E90FF"; // Blue for headers
@@ -201,28 +207,27 @@ const OrderPage = () => {
     doc.setTextColor("#FFFFFF"); // White text for header
     doc.setFont("helvetica", "bold");
     doc.text("OLX Invoice", 20, 25);
-    
+
     // Invoice Details Section
     doc.setFontSize(16);
     doc.setTextColor(textColor);
     doc.setFont("helvetica", "bold");
     doc.text("Invoice Details", 20, 50);
-    
+
     doc.setDrawColor("#D3D3D3"); // Light gray for lines
     doc.line(20, 52, 190, 52); // Underline for section title
-    
+
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     const invoiceDetails = [
       `Invoice ID: ${order.billDetails?.invoiceId || "N/A"}`,
-      `Invoice Date: ${
-        order.billDetails?.paymentDate
-          ? new Date(order.billDetails.paymentDate).toLocaleDateString()
-          : "N/A"
+      `Invoice Date: ${order.billDetails?.paymentDate
+        ? new Date(order.billDetails.paymentDate).toLocaleDateString()
+        : "N/A"
       }`,
       `Order Status: ${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : "N/A"}`,
     ];
-    
+
     let yPos = 60;
     invoiceDetails.forEach((line) => {
       // Ensure line is a valid string
@@ -236,7 +241,7 @@ const OrderPage = () => {
     doc.setFont("helvetica", "bold");
     doc.text("Product Details", 20, yPos + 10);
     doc.line(20, yPos + 12, 190, yPos + 12); // Underline
-    
+
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     yPos += 20;
@@ -244,7 +249,7 @@ const OrderPage = () => {
       { label: "Product", value: order.productId?.title || "N/A" },
       { label: "Price", value: order.billDetails ? `${order.billDetails.currency} ${order.billDetails.amount}` : "N/A" },
     ];
-    
+
     // Table-like structure for product details
     doc.setFillColor("#F5F5F5"); // Light gray background for table
     doc.rect(20, yPos - 2, 170, 8 * productDetails.length + 4, "F");
@@ -263,7 +268,7 @@ const OrderPage = () => {
     doc.setFont("helvetica", "bold");
     doc.text("Buyer Details", 20, yPos);
     doc.line(20, yPos + 2, 190, yPos + 2); // Underline
-    
+
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     yPos += 10;
@@ -273,7 +278,7 @@ const OrderPage = () => {
       { label: "Phone", value: buyerInfo.phoneNumber || "Unknown" },
       { label: "Address", value: buyerInfo.address || "Unknown" },
     ];
-    
+
     // Table-like structure for buyer details
     doc.setFillColor("#F5F5F5"); // Light gray background for table
     doc.rect(20, yPos - 2, 170, 8 * buyerDetails.length + 4, "F");
@@ -291,7 +296,7 @@ const OrderPage = () => {
     doc.setTextColor("#808080"); // Gray for footer
     doc.text("Thank you for shopping with OLX!", 20, yPos);
     doc.text("For any queries, contact support@olx.com", 20, yPos + 8);
-    
+
     // Save the PDF
     doc.save(`invoice_${order.billDetails?.invoiceId || "unknown"}.pdf`);
   };
@@ -308,25 +313,22 @@ const OrderPage = () => {
         <div className="bg-white shadow-md rounded-lg p-6">
           <div className="flex flex-col sm:flex-row gap-4 mb-6 border-b border-gray-200">
             <button
-              className={`py-2 px-4 text-sm font-medium ${
-                activeTab === 'pending' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
-              }`}
+              className={`py-2 px-4 text-sm font-medium ${activeTab === 'pending' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
+                }`}
               onClick={() => setActiveTab('pending')}
             >
               Pending
             </button>
             <button
-              className={`py-2 px-4 text-sm font-medium ${
-                activeTab === 'accepted' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
-              }`}
+              className={`py-2 px-4 text-sm font-medium ${activeTab === 'accepted' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
+                }`}
               onClick={() => setActiveTab('accepted')}
             >
               Accepted
             </button>
             <button
-              className={`py-2 px-4 text-sm font-medium ${
-                activeTab === 'rejected' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
-              }`}
+              className={`py-2 px-4 text-sm font-medium ${activeTab === 'rejected' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
+                }`}
               onClick={() => setActiveTab('rejected')}
             >
               Rejected
@@ -349,13 +351,12 @@ const OrderPage = () => {
                       <p className="text-sm text-gray-600">Price: ₹ {order.productId.price}</p>
                       <p className="text-sm text-gray-600">Seller: {order.sellerId.name}</p>
                       <p
-                        className={`text-sm font-medium ${
-                          order.status === 'accepted'
-                            ? 'text-green-600'
-                            : order.status === 'rejected'
+                        className={`text-sm font-medium ${order.status === 'accepted'
+                          ? 'text-green-600'
+                          : order.status === 'rejected'
                             ? 'text-red-600'
                             : 'text-yellow-600'
-                        }`}
+                          }`}
                       >
                         Status: {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </p>
@@ -398,13 +399,12 @@ const OrderPage = () => {
       {currentOrder ? (
         <div className="bg-white shadow-md rounded-lg p-6 text-center">
           <p
-            className={`text-xl font-semibold ${
-              currentOrder.status === 'accepted'
-                ? 'text-green-600'
-                : currentOrder.status === 'rejected'
+            className={`text-xl font-semibold ${currentOrder.status === 'accepted'
+              ? 'text-green-600'
+              : currentOrder.status === 'rejected'
                 ? 'text-red-600'
                 : 'text-yellow-600'
-            }`}
+              }`}
           >
             Your order is {currentOrder.status.charAt(0).toUpperCase() + currentOrder.status.slice(1)}
           </p>
@@ -456,9 +456,11 @@ const OrderPage = () => {
             {role !== 'seller' && !product.isSold && (
               <button
                 onClick={handlePlaceOrder}
-                className="mt-4 bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition"
+                disabled={loading} // 🧊 Disable while loading
+                className={`mt-4 px-6 py-2 rounded-md transition ${loading ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+                  } text-white`}
               >
-                Place Order Request
+                {loading ? 'Processing...' : 'Place Order Request'}
               </button>
             )}
             {product.isSold && (
@@ -505,9 +507,11 @@ const OrderPage = () => {
               </button>
               <button
                 onClick={handleCheckout}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                disabled={loading} // 🧊 Prevent multiple checkout
+                className={`bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
               >
-                Continue to Payment
+                {loading ? 'Redirecting...' : 'Continue to Payment'}
               </button>
             </div>
           </div>
@@ -526,25 +530,22 @@ const OrderPage = () => {
           <h2 className="text-xl font-semibold text-gray-700 mb-4">Order History</h2>
           <div className="flex flex-col sm:flex-row gap-4 mb-6 border-b border-gray-200">
             <button
-              className={`py-2 px-4 text-sm font-medium ${
-                activeTab === 'pending' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
-              }`}
+              className={`py-2 px-4 text-sm font-medium ${activeTab === 'pending' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
+                }`}
               onClick={() => setActiveTab('pending')}
             >
               Pending
             </button>
             <button
-              className={`py-2 px-4 text-sm font-medium ${
-                activeTab === 'accepted' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
-              }`}
+              className={`py-2 px-4 text-sm font-medium ${activeTab === 'accepted' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
+                }`}
               onClick={() => setActiveTab('accepted')}
             >
               Accepted
             </button>
             <button
-              className={`py-2 px-4 text-sm font-medium ${
-                activeTab === 'rejected' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
-              }`}
+              className={`py-2 px-4 text-sm font-medium ${activeTab === 'rejected' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
+                }`}
               onClick={() => setActiveTab('rejected')}
             >
               Rejected
@@ -567,22 +568,23 @@ const OrderPage = () => {
                       <p className="text-sm text-gray-600">Price: ₹ {order.productId.price}</p>
                       <p className="text-sm text-gray-600">Seller: {order.sellerId.name}</p>
                       <p
-                        className={`text-sm font-medium ${
-                          order.status === 'accepted'
-                            ? 'text-green-600'
-                            : order.status === 'rejected'
+                        className={`text-sm font-medium ${order.status === 'accepted'
+                          ? 'text-green-600'
+                          : order.status === 'rejected'
                             ? 'text-red-600'
                             : 'text-yellow-600'
-                        }`}
+                          }`}
                       >
                         Status: {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </p>
                       {order.status === 'accepted' && order.paymentStatus === 'pending' && (
                         <button
-                          onClick={handleProceedToPayment}
-                          className="mt-2 bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 transition"
+                          onClick={() => !loading && handleProceedToPayment()} 
+                          disabled={loading}
+                          className={`mt-2 bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
                         >
-                          Proceed to Payment
+                          {loading ? 'Loading...' : 'Proceed to Payment'}
                         </button>
                       )}
                       {order.paymentStatus === 'completed' && (

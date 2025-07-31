@@ -26,6 +26,8 @@ const Login = () => {
       res.data.user.role === 'admin' ? navigate('/statistics') : navigate('/');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,9 +71,11 @@ const Login = () => {
 
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
+              disabled={loading}
+              className={`w-full bg-green-600 text-white py-2 rounded-md transition ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'
+                }`}
             >
-              Login
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </Form>
         </Formik>

@@ -1,24 +1,25 @@
-import { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axiosInstance from '../api/axiosInstance';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const handleSendOtp = async (values: any) => {
-    if (loading) return;
+    if (loading) return; // prevent multiple rapid clicks
     setLoading(true);
     try {
       await axiosInstance.post('/auth/send-otp', { email: values.email });
       toast.success('OTP sent to your email');
-      // redirect to /reset-password with email in state
       navigate('/reset-password', { state: { email: values.email } });
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,22 +35,27 @@ const ForgotPassword = () => {
           })}
           onSubmit={handleSendOtp}
         >
-          <Form>
-            <Field
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <ErrorMessage name="email" component="div" className="text-sm text-red-500 mb-4" />
+          {() => (
+            <Form>
+              <Field
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <ErrorMessage name="email" component="div" className="text-sm text-red-500 mb-4" />
 
-            <button
-              type="submit"
-              className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition mb-4"
-            >
-              Send OTP
-            </button>
-          </Form>
+              <button
+                type="submit"
+                className={`w-full bg-green-600 text-white py-2 rounded-md transition mb-4 ${
+                  loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'
+                }`}
+                disabled={loading}
+              >
+                {loading ? 'Sending OTP...' : 'Send OTP'}
+              </button>
+            </Form>
+          )}
         </Formik>
       </div>
     </div>

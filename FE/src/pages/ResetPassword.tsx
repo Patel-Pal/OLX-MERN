@@ -1,4 +1,4 @@
-import { useState } from 'react';
+// import { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axiosInstance from '../api/axiosInstance';
@@ -6,14 +6,14 @@ import { toast } from 'react-toastify';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const ResetPassword = () => {
-    const [loading, setLoading] = useState(false);
+    // const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const prefilledEmail = (location.state as any)?.email || '';
 
   const handleReset = async (values: any) => {
-    if (loading) return;
-    setLoading(true);
+    // if (loading) return;
+    // setLoading(true);
     try {
       await axiosInstance.post('/auth/reset-password', values);
       toast.success('Password reset successfully');

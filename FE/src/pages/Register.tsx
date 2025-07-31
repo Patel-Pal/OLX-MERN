@@ -41,6 +41,8 @@ const Register = () => {
       navigate('/login');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Registration failed');
+    }finally {
+      setLoading(false);
     }
   };
 
@@ -99,9 +101,12 @@ const Register = () => {
 
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition mb-4"
+              disabled={loading}
+              className={`w-full bg-blue-600 text-white py-2 rounded-md transition mb-4 ${
+                loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
+              }`}
             >
-              Register
+              {loading ? 'Registering...' : 'Register'}
             </button>
           </Form>
         </Formik>
