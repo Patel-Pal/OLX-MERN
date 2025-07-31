@@ -1,4 +1,4 @@
-// import { useState } from 'react';
+import { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axiosInstance from '../api/axiosInstance';
@@ -6,20 +6,22 @@ import { toast } from 'react-toastify';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const ResetPassword = () => {
-    // const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // ✅ Loading state to prevent multiple API calls
   const navigate = useNavigate();
   const location = useLocation();
   const prefilledEmail = (location.state as any)?.email || '';
 
   const handleReset = async (values: any) => {
-    // if (loading) return;
-    // setLoading(true);
+    if (loading) return; // ✅ Prevent duplicate request
+    setLoading(true);
     try {
       await axiosInstance.post('/auth/reset-password', values);
       toast.success('Password reset successfully');
       navigate('/login');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to reset password');
+    } finally {
+      setLoading(false); // ✅ Reset loading state
     }
   };
 
@@ -44,7 +46,7 @@ const ResetPassword = () => {
               type="email"
               placeholder="Email"
               className="w-full px-4 py-2 border border-gray-300 rounded-md mb-2"
-              disabled // make it read-only
+              disabled // ✅ Read-only email field
             />
             <ErrorMessage name="email" component="div" className="text-sm text-red-500 mb-2" />
 
@@ -66,9 +68,14 @@ const ResetPassword = () => {
 
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
+              disabled={loading} // ✅ Disable button while API call in progress
+              className={`w-full text-white py-2 rounded-md transition ${
+                loading
+                  ? 'bg-green-400 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-700'
+              }`}
             >
-              Reset Password
+              {loading ? 'Resetting...' : 'Reset Password'} {/* ✅ Dynamic button text */}
             </button>
           </Form>
         </Formik>

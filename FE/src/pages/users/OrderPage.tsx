@@ -192,114 +192,122 @@ const OrderPage = () => {
   };
 
   //pdf generation function 
-  const generateBill = (order: any, buyerData: any) => {
-    const doc = new jsPDF();
+  const generateBill = async (order: any, buyerData: any) => {
+  const doc = new jsPDF();
 
-    // Set font and colors
-    doc.setFont("helvetica", "normal");
-    const primaryColor = "#1E90FF"; // Blue for headers
-    const textColor = "#333333"; // Dark gray for text
+  const primaryColor = "#1E90FF";
+  const textColor = "#333333";
+  const lightGray = "#F5F5F5";
+  const startX = 20;
+  let y = 20;
 
-    // Header Section
-    doc.setFillColor(primaryColor);
-    doc.rect(0, 0, 210, 40, "F"); // Header background
-    doc.setFontSize(24);
-    doc.setTextColor("#FFFFFF"); // White text for header
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(22);
+  doc.setTextColor("#FFFFFF");
+  doc.setFillColor(primaryColor);
+  doc.rect(0, 0, 210, 30, "F");
+  doc.text("OLX Invoice", startX, 20);
+
+  // Invoice Section
+  doc.setFontSize(14);
+  doc.setTextColor(textColor);
+  y += 20;
+  doc.text("Invoice Details", startX, y);
+  doc.setDrawColor("#D3D3D3");
+  doc.line(startX, y + 2, 190, y + 2);
+
+  const invoiceDetails = [
+    `Invoice ID: ${order.billDetails?.invoiceId || "N/A"}`,
+    `Date: ${order.billDetails?.paymentDate ? new Date(order.billDetails.paymentDate).toLocaleDateString() : "N/A"}`,
+    `Order Status: ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}`
+  ];
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  y += 10;
+  invoiceDetails.forEach(line => {
+    doc.text(line, startX, y);
+    y += 8;
+  });
+
+  // Product Section
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text("Product Details", startX, y + 5);
+  doc.line(startX, y + 7, 190, y + 7);
+  y += 15;
+
+  doc.setFillColor(lightGray);
+  doc.rect(startX, y - 3, 170, 30, "F");
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.text("Product:", startX + 5, y + 7);
+  doc.text(order.productId?.title || "N/A", startX + 40, y + 7);
+  doc.text("Price:", startX + 5, y + 17);
+  doc.text(order.billDetails ? `${order.billDetails.currency} ${order.billDetails.amount}` : "N/A", startX + 40, y + 17);
+
+  // Load image and insert
+  const imgUrl = order.productId?.imageURL;
+  if (imgUrl) {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = imgUrl;
+
+    img.onload = () => {
+      doc.addImage(img, "JPEG", 140, y, 40, 30);
+
+      // Buyer Section (after image)
+      addBuyerSection();
+    };
+
+    img.onerror = () => {
+      console.warn("Image failed to load, generating without image");
+      addBuyerSection(); // still generate without image
+    };
+  } else {
+    addBuyerSection();
+  }
+
+  function addBuyerSection() {
+    y += 40;
+
     doc.setFont("helvetica", "bold");
-    doc.text("OLX Invoice", 20, 25);
-
-    // Invoice Details Section
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.setTextColor(textColor);
-    doc.setFont("helvetica", "bold");
-    doc.text("Invoice Details", 20, 50);
+    doc.text("Buyer Details", startX, y);
+    doc.line(startX, y + 2, 190, y + 2);
+    y += 10;
 
-    doc.setDrawColor("#D3D3D3"); // Light gray for lines
-    doc.line(20, 52, 190, 52); // Underline for section title
-
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    const invoiceDetails = [
-      `Invoice ID: ${order.billDetails?.invoiceId || "N/A"}`,
-      `Invoice Date: ${order.billDetails?.paymentDate
-        ? new Date(order.billDetails.paymentDate).toLocaleDateString()
-        : "N/A"
-      }`,
-      `Order Status: ${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : "N/A"}`,
-    ];
-
-    let yPos = 60;
-    invoiceDetails.forEach((line) => {
-      // Ensure line is a valid string
-      const validLine = typeof line === "string" ? line : "N/A";
-      doc.text(validLine, 20, yPos);
-      yPos += 8;
-    });
-
-    // Product Details Section
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text("Product Details", 20, yPos + 10);
-    doc.line(20, yPos + 12, 190, yPos + 12); // Underline
-
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    yPos += 20;
-    const productDetails = [
-      { label: "Product", value: order.productId?.title || "N/A" },
-      { label: "Price", value: order.billDetails ? `${order.billDetails.currency} ${order.billDetails.amount}` : "N/A" },
-    ];
-
-    // Table-like structure for product details
-    doc.setFillColor("#F5F5F5"); // Light gray background for table
-    doc.rect(20, yPos - 2, 170, 8 * productDetails.length + 4, "F");
-    productDetails.forEach((item, index) => {
-      const validLabel = typeof item.label === "string" ? item.label : "N/A";
-      const validValue = typeof item.value === "string" ? item.value : "N/A";
-      doc.text(validLabel, 25, yPos + 8 * index + 4);
-      doc.text(":", 65, yPos + 8 * index + 4);
-      doc.text(validValue, 70, yPos + 8 * index + 4);
-    });
-    yPos += 8 * productDetails.length + 10;
-
-    // Buyer Details Section
-    const buyerInfo = buyerData || order.buyerId || {};
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text("Buyer Details", 20, yPos);
-    doc.line(20, yPos + 2, 190, yPos + 2); // Underline
-
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    yPos += 10;
+    const buyer = buyerData || order.buyerId || {};
     const buyerDetails = [
-      { label: "Name", value: buyerInfo.name || "Unknown" },
-      { label: "Email", value: buyerInfo.email || order.customer_email || "Unknown" },
-      { label: "Phone", value: buyerInfo.phoneNumber || "Unknown" },
-      { label: "Address", value: buyerInfo.address || "Unknown" },
+      { label: "Name", value: buyer.name || "Unknown" },
+      { label: "Email", value: buyer.email || order.customer_email || "Unknown" },
+      { label: "Phone", value: buyer.phoneNumber || "Unknown" },
+      { label: "Address", value: buyer.address || "Unknown" }
     ];
 
-    // Table-like structure for buyer details
-    doc.setFillColor("#F5F5F5"); // Light gray background for table
-    doc.rect(20, yPos - 2, 170, 8 * buyerDetails.length + 4, "F");
-    buyerDetails.forEach((item, index) => {
-      const validLabel = typeof item.label === "string" ? item.label : "N/A";
-      const validValue = typeof item.value === "string" ? item.value : "N/A";
-      doc.text(validLabel, 25, yPos + 8 * index + 4);
-      doc.text(":", 65, yPos + 8 * index + 4);
-      doc.text(validValue, 70, yPos + 8 * index + 4);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.setFillColor(lightGray);
+    doc.rect(startX, y - 3, 170, 8 * buyerDetails.length + 4, "F");
+
+    buyerDetails.forEach((item, i) => {
+      doc.text(`${item.label}:`, startX + 5, y + 8 * i + 4);
+      doc.text(item.value, startX + 40, y + 8 * i + 4);
     });
-    yPos += 8 * buyerDetails.length + 10;
 
-    // Footer Section
+    y += 8 * buyerDetails.length + 10;
+
+    // Footer
     doc.setFontSize(10);
-    doc.setTextColor("#808080"); // Gray for footer
-    doc.text("Thank you for shopping with OLX!", 20, yPos);
-    doc.text("For any queries, contact support@olx.com", 20, yPos + 8);
+    doc.setTextColor("#808080");
+    doc.text("Thank you for shopping with OLX!", startX, y);
+    doc.text("For any queries, contact support@olx.com", startX, y + 8);
 
-    // Save the PDF
     doc.save(`invoice_${order.billDetails?.invoiceId || "unknown"}.pdf`);
-  };
+  }
+};
+
 
   const filteredOrders = orders.filter((order) => order.status === activeTab);
 
