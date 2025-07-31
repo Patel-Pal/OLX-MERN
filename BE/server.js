@@ -10,7 +10,6 @@ const cloudinary = require('./config/cloudinary');
 
 // const orderRoutes = require('./routes/orderRoutes');
 
-
 dotenv.config();
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);

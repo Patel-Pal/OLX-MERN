@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { createOrder,
-    getBuyerOrders,
-    getSellerOrders,
-    updateOrderStatus,
-    createCheckoutSession,
-    confirmPayment,
-} = require('../controllers/orderController');
+        getBuyerOrders,
+        getSellerOrders,
+        updateOrderStatus,
+        createCheckoutSession,
+        confirmPayment,
+    } = require('../controllers/orderController');
 const { verifyToken, verifySeller } = require('../middleware/authMiddleware');
 
 // Create order (buyer)
