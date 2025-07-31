@@ -24,6 +24,7 @@ const OrderPage = () => {
   const [address, setAddress] = useState('');
   const buyerId = sessionStorage.getItem('userId');
   const token = sessionStorage.getItem('token');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -119,6 +120,8 @@ const OrderPage = () => {
   }, [id, buyerId, navigate, location.search, token]);
 
   const handlePlaceOrder = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
       const res = await axiosInstance.post(
         `/orders/create`,

@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 // const cloudinary = require('cloudinary').v2;
 const cloudinary = require('../config/cloudinary');
 const fs = require('fs').promises;
+const OTP = require('../models/otpModel');
+const sendEmail = require('../utils/mailer');
 
 // Cloudinary configuration
 cloudinary.config({
@@ -148,9 +150,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-
-
-
 // Get user profile
 exports.getProfile = async (req, res) => {
   try {
@@ -192,4 +191,32 @@ exports.updateBuyerProfile = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
+};
+
+// Send OTP
+exports.sendOtp = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  await OTP.create({ email, otp });
+  await sendEmail(email, 'Password Reset OTP', `Your OTP is: ${otp}`);
+
+  res.status(200).json({ message: 'OTP sent to your email' });
+};
+
+// Reset Password
+exports.resetPassword = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  const validOtp = await OTP.findOne({ email, otp });
+  if (!validOtp) return res.status(400).json({ message: 'Invalid or expired OTP' });
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await User.findOneAndUpdate({ email }, { password: hashedPassword });
+
+  await OTP.deleteMany({ email }); // Cleanup
+  res.status(200).json({ message: 'Password reset successful' });
 };

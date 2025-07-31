@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axiosInstance from '../api/axiosInstance';
@@ -9,6 +10,7 @@ import { toast } from 'react-toastify';
 
 const Register = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const initialValues = {
     name: '',
@@ -31,6 +33,8 @@ const Register = () => {
   });
 
   const handleSubmit = async (values: any) => {
+    if (loading) return;
+    setLoading(true);
     try {
       await axiosInstance.post('/auth/register', values);
       toast.success('Registration successful!');
@@ -103,11 +107,11 @@ const Register = () => {
         </Formik>
 
         {/* Divider */}
-        <div className="flex items-center justify-center my-4 text-sm text-gray-500">
+        {/* <div className="flex items-center justify-center my-4 text-sm text-gray-500">
           <span className="border-t border-gray-300 w-full"></span>
           <span className="px-2">OR</span>
           <span className="border-t border-gray-300 w-full"></span>
-        </div>
+        </div> */}
 
         {/* OAuth buttons */}
         {/* <div className="flex justify-center gap-4 mb-4">

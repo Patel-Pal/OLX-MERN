@@ -15,6 +15,8 @@ import OrderPage from '../pages/users/OrderPage';
 import AdminAnalytics from '../pages/admin/AdminAnalytics';
 import AdminBuyers from '../pages/admin/BuyersDetail';
 import AdminSellers from '../pages/admin/SellerDetails';
+import ForgotPassword from '../pages/ForgotPassword';
+import ResetPassword from '../pages/ResetPassword';
 
 export default function AppRoutes() {
   const token = sessionStorage.getItem('token');
@@ -22,12 +24,14 @@ export default function AppRoutes() {
   const location = useLocation();
 
   // Paths where you want to hide header/footer
-  const hideLayout = location.pathname === '/not-found' ;
+  const hideLayout = location.pathname === '/not-found';
+  const forgerpass = location.pathname === '/forgot-password';
+  const resetpass = location.pathname === '/reset-password';
   const chatPath = location.pathname.startsWith('/chat/');
 
   return (
     <>
-      {!hideLayout && !chatPath && <Navbar />}
+      {!hideLayout && !chatPath && !resetpass && !forgerpass && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/all-products" element={<AllProducts />} />
@@ -50,11 +54,12 @@ export default function AppRoutes() {
         {/* Authentication Routes */}
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword/>} />
 
         <Route path="/not-found" element={<NotFound />} />
       </Routes>
-      {!hideLayout && !chatPath && <Footer />}
+      {!hideLayout && !chatPath && !resetpass && !forgerpass && <Footer />}
     </>
   );
 }
