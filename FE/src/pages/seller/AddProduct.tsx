@@ -79,9 +79,9 @@ const AddProduct = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const products = res.data;
-
+      console.log('Products fetched:', products);
       // Check for chats for each product
-      const productsWithChatStatus:any = await Promise.all(
+      const productsWithChatStatus: any = await Promise.all(
         products.map(async (product: any) => {
           try {
             const chatRes = await axiosInstance.get(`/chat/${product._id}`, {
@@ -234,28 +234,63 @@ const AddProduct = () => {
             {products.map((prod: any) => (
               <li
                 key={prod._id}
-                className="flex flex-col p-4 border rounded-2xl shadow-md bg-white hover:shadow-lg transition-shadow"
+                className="flex flex-col p-4 border rounded-2xl shadow-md bg-white hover:shadow-lg transition-shadow space-y-3"
               >
-                <img
-                  src={prod.imageURL}
-                  alt={prod.title}
-                  className="w-full h-48 object-cover rounded-lg mb-4"
-                />
+                {/* Product Image */}
+                <div className="relative w-full h-48 overflow-hidden rounded-xl">
+                  <img
+                    src={prod.imageURL}
+                    alt={prod.title}
+                    className={`w-full h-full object-cover transition-all duration-300 ${prod.isSold ? 'blur-sm opacity-70' : ''
+                      }`}
+                  />
+                  {prod.isSold && (
+                    <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded shadow-md font-bold z-10">
+                      SOLD
+                    </div>
+                  )}
+                </div>
 
-                {/* Product title + buttons in same line */}
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-lg">{prod.title}</h3>
+                {/* Title & Action Buttons */}
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg text-gray-800 line-clamp-1">{prod.title}</h3>
                   <div className="flex gap-2">
-                    <button onClick={() => handleEdit(prod)} className="text-blue-600 hover:text-blue-800">
+                    {/* Edit Button */}
+                    <button
+                      onClick={() => !prod.isSold && handleEdit(prod)}
+                      disabled={prod.isSold}
+                      className={`transition ${prod.isSold
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-blue-600 hover:text-blue-800'
+                        }`}
+                      title="Edit"
+                    >
                       <Pencil size={18} />
                     </button>
-                    <button onClick={() => handleDelete(prod._id)} className="text-red-600 hover:text-red-800">
+
+                    {/* Delete Button */}
+                    <button
+                      onClick={() => !prod.isSold && handleDelete(prod._id)}
+                      disabled={prod.isSold}
+                      className={`transition ${prod.isSold
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-red-600 hover:text-red-800'
+                        }`}
+                      title="Delete"
+                    >
                       <Trash2 size={18} />
                     </button>
+
+                    {/* Chat Button */}
                     {prod.hasChat && (
                       <button
-                        onClick={() => handleChatClick(prod._id)}
-                        className="text-green-600 hover:text-green-800"
+                        onClick={() => !prod.isSold && handleChatClick(prod._id)}
+                        disabled={prod.isSold}
+                        className={`transition ${prod.isSold
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-green-600 hover:text-green-800'
+                          }`}
+                        title="Chat"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -275,11 +310,17 @@ const AddProduct = () => {
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-700 flex-1">{prod.description}</p>
-                <div className="mt-2 text-sm text-gray-600 font-medium">
-                  ₹{prod.price} | <span className="capitalize">{prod.category}</span>
+                {/* Description */}
+                <p className="text-sm text-gray-600 line-clamp-2">{prod.description}</p>
+
+                {/* Price and Category */}
+                <div className="text-sm font-medium text-gray-700 mt-auto">
+                  ₹{prod.price} &nbsp;|&nbsp;
+                  <span className="capitalize">{prod.category}</span>
                 </div>
               </li>
+
+
             ))}
           </ul>
         )}
